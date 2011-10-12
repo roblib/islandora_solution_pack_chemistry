@@ -1,0 +1,7 @@
+; $Id$ 
+name = Islandora Chemistry Solution Pack
+description = Islandora configurations for storing chemical structures
+dependencies[] = fedora_repository
+package = Islandora Solution Pack
+version = 11.2.beta1
+core = 6.x
