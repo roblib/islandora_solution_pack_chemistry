@@ -170,6 +170,7 @@ class IslandoraChem {
 
     if (!file_exists($filename)) {
       system("convert -resize \"$width\" -gravity center -extent \"$width\"x\"$width\" \"$file\".svg \"$filename\" 2>&1 &", $returnValue);
+      unlink($file . '.svg');
     }
     else {
       $returnValue = '0';

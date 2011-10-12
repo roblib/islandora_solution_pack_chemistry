@@ -5,6 +5,10 @@
         <type>chemical/x-pdb</type>
         <type>chemical/x-cdx</type>
         <type>chemical/x-xyz</type>
+        <type>chemical/x-gamess-input</type>
+        <type>chemical/x-gamess-output</type>
+        <type>chemical/x-qchem-input</type>
+        <type>chemical/x-qchem-output</type>
         <type>text/xml</type>
     </mimetypes>
     <ingest_rules>
@@ -13,6 +17,8 @@
             <applies_to>chemical/x-pdb</applies_to>
             <applies_to>chemical/x-cdx</applies_to>
             <applies_to>chemical/x-xyz</applies_to>
+            <applies_to>chemical/x-gamess-output</applies_to>
+            <applies_to>chemical/x-qchem-output</applies_to>
             <ingest_methods>
                 <ingest_method class="IslandoraChem" dsid="TN"
                     file="chem.inc" method="chem2jpg"
@@ -50,7 +56,8 @@
       module="islandora_chem_sp"/>
         </datastream>
         <datastream dsid="CML"></datastream>
-        <datastream dsid="SMI"></datastream>
+        <datastream dsid="INPUT"></datastream>
+        <datastream dsid="CODE"></datastream>
         <datastream dsid="QDC"></datastream>
     </datastreams>
     <ingest_form dsid="QDC" page="2">
