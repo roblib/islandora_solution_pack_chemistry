@@ -1,6 +1,10 @@
 <?php
 
-// $Id$
+/**
+ * @file
+ *
+ * Provides the functionality to process and view chemical structure files.
+ */
 
 define('ISLANDORA_CHEM_SP_MODS_FORM_NAME', 'Islandora Chem MODS Form');
 

@@ -44,6 +44,10 @@
                     file="chem.inc" method="chem2cml" 
                     modified_files_ext="cml" module="islandora_chem_sp">
                 </ingest_method>
+                <ingest_method class="IslandoraChem" dsid="SPIDER"
+                    file="chem.inc" method="chem2rdf" 
+                    modified_files_ext="rdf" module="islandora_chem_sp">
+                </ingest_method>
             </ingest_methods>
         </rule>
     </ingest_rules>
@@ -56,6 +60,7 @@
       module="islandora_chem_sp"/>
         </datastream>
         <datastream dsid="CML"></datastream>
+        <datastream dsid="SPIDER"></datastream>
         <datastream dsid="INPUT"></datastream>
         <datastream dsid="CODE"></datastream>
         <datastream dsid="QDC"></datastream>

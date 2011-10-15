@@ -1,13 +1,10 @@
 <?php
 
-// $Id$
-
 /**
  * @file
  *
  * Installs the required associations/forms.
  */
-
 define('ISLANDORA_CHEM_SP_MODS_FORM_NAME', 'Islandora Chem MODS Form');
 
 /**
@@ -32,6 +29,39 @@ function islandora_chem_sp_install() {
     $object->transform = 'mods_to_dc.xsl';
     $result = drupal_write_record('islandora_content_model_forms', $object);
   }
+}
+
+function islandora_chem_sp_requirements($phase) {
+  global $base_url;
+
+  $requirements = array();
+
+  $requirements['fedora-jmol']['title'] = t("Jmol installed");
+  $module_path = drupal_get_path('module', 'islandora_chem_sp');
+  $result = file_exists($module_path . '/js/jmol/Jmol.js');
+  if (!$result) {
+    $requirements['fedora-jmol']['value'] = t('Jmol is not installed');
+    $requirements['fedora-jmol']['description'] = t('Islandora will not be able to show 3D structures. Click <a href="http://jmol.sourceforge.net/">here</a> for installation instructions');
+    $requirements['fedora-jmol']['severity'] = REQUIREMENT_WARNING;
+  }
+  else {
+    $requirements['fedora-jmol']['value'] = t("Installed");
+    $requirements['fedora-jmol']['severity'] = REQUIREMENT_OK;
+  }
+
+  $requirements['fedora-obabel']['title'] = t("Open Babel installed");
+  $result = exec('obabel');
+  if (!$result) {
+    $requirements['fedora-obabel']['value'] = t('Open Babel is not in the path');
+    $requirements['fedora-obabel']['description'] = t('Islandora will not be able to convert chemistry files. Click <a href="http://openbabel.org">here</a> for installation instructions');
+    $requirements['fedora-obabel']['severity'] = REQUIREMENT_WARNING;
+  }
+  else {
+    $requirements['fedora-obabel']['value'] = t("Installed");
+    $requirements['fedora-obabel']['severity'] = REQUIREMENT_OK;
+  }
+  
+  return $requirements;
 }
 
 /**

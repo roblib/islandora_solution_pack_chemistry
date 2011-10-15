@@ -4,6 +4,7 @@
     <content_model name="Add structure to Collection" dsid="ISLANDORACM" namespace="islandora:chem" pid="islandora:sp_chem"/>
   </content_models>
   <search_terms>
+      <term field="dc.title">dc.title</term>
   </search_terms>
   <relationship>isMemberOfCollection</relationship>
 </collection_policy>
