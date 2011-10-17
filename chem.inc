@@ -40,22 +40,6 @@ class IslandoraChem {
     $content = "";
     $pathTojs = drupal_get_path('module', 'islandora_chem_sp') . '/js/';
 
-//    $molURL = $base_url . base_path() . 'fedora/repository/' . $this->pid . '/MOL/MOL.mol';
-//    $pathTojs = drupal_get_path('module', 'islandora_chem_sp') . '/js/';
-//    drupal_add_js("$pathTojs" . 'jmol/Jmol.js');
-//    $content1 .= '<div id="viewer"></div>';
-//
-//    $content1 .= '<script>jmolInitialize("/sites/all/modules/islandora_solution_pack_chemistry/js/jmol"); 
-//                  jmolSetDocument(false);
-//                  var s2 = jmolApplet(300, "load ' . $molURL . '");
-//                  document.getElementById("viewer").innerHTML=s2;
-//                  </script>';
-//
-//    drupal_add_js("$pathTojs" . 'jsv/JSVfunctions.js', 'inline', 'header');
-//    drupal_add_js('jsvls="load ' . $base_url . '/fedora/repository/' . $this->pid . '/IR/IR.jdx; reverseplot true; gridon false; plotcolor 150,100,200";
-//                  insertJSVObject("' . $base_url . '/' . $pathTojs . 'jsv/jspecview.jar","JSVApplet","600","400",jsvls);
-//                  ', 'inline', 'footer');
-
     $content2 = '<img src="' . $base_url . '/fedora/repository/' . $this->pid . '/MEDIUM/MEDIUM.jpg" />';
     $collectionHelper = new CollectionClass();
     $xmlstr = $collectionHelper->getStream($this->pid, "CML");
@@ -78,12 +62,8 @@ class IslandoraChem {
       $mw2 = $mw[0][0];
       $formula2 = str_replace(' ', '', $formula);
       $formula2 = preg_replace('/([0-9]*)/', '<sub>$1</sub>', $formula2);
-
-      $url = 'http://cactus.nci.nih.gov/chemical/structure/' . urlencode($inchi_key) . '/names/xml';
-
-      $iupac_xml = new DOMDocument();
-      $iupac_xml->load($url);
-      $iupac = $iupac_xml->getElementsByTagName('item')->item(0)->nodeValue;
+      
+      $iupac = $xml->molecule->name;
       $iupac = ucfirst(strtolower($iupac));
       if ($iupac == NULL) {
         $iupac = 'Not found';
@@ -106,8 +86,9 @@ class IslandoraChem {
           $synonyms = ucfirst(strtolower($synonym[0])) . ', ' . ucfirst(strtolower($synonym[1])) . ', ' . ucfirst(strtolower($synonym[2]));
       }
 
-      if ($xml->molecule->metadata) {
-        $spider_url = $xml->molecule->metadata->attributes()->content;
+      $spider_url = $xml->molecule->metadata->attributes()->content;
+
+      if ($spider_url != '') {
         $spider_entry = l($spider_url, $spider_url);
       }
       else {
@@ -176,18 +157,6 @@ class IslandoraChem {
       '#title' => t('1H NMR'),
       '#content' => $content6,
     );
-//
-//    $tabset['first_tab']['tabs']['13cnmr'] = array(
-//      '#type' => 'tabpage',
-//      '#title' => t('13C NMR'),
-//      '#content' => $content4,
-//    );
-//
-//    $tabset['first_tab']['tabs']['ir'] = array(
-//      '#type' => 'tabpage',
-//      '#title' => t('IR'),
-//      '#content' => $content5,
-//    );
 
     return $tabset;
   }
@@ -233,7 +202,7 @@ class IslandoraChem {
     $returnValue = '0';
 
     if (!file_exists($filename)) {
-      system("convert -resize \"$width\" -gravity center -extent \"$width\"x\"$width\" \"$file\".svg \"$filename\" 2>&1 &", $returnValue);
+      system("convert \"$file\".svg -resize \"$width\"x\"$width\" -gravity center -extent \"$width\"x\"$width\" \"$filename\" 2>&1 &", $returnValue);
       unlink($file . '.svg');
     }
     else {
@@ -297,13 +266,10 @@ class IslandoraChem {
     $filename = $file . $file_suffix;
     $filename = str_replace(" ", "-", $filename);
 
-    exec("obprop \"$file\"", $return);
-    $inchi = $return[6];
-    $inchi = preg_replace('!\s+!', ' ', $inchi);
-    $inchi_array = explode(' ', $inchi);
-    $inchi_value = $inchi_array[1];
+    exec("obabel \"$file\" -oinchi -xK", $inchi_key);
+    $inchi_key = $inchi_key[0];
 
-    $url = 'http://rdf.chemspider.com/' . $inchi_value;
+    $url = 'http://rdf.chemspider.com/' . $inchi_key;
 
     if (!file_exists($filename)) {
       $xml = new DOMDocument();
@@ -356,11 +322,10 @@ class IslandoraChem {
       $inchi_array = explode(' ', $inchi);
       $inchi_value = $inchi_array[1];
       $rdf = new DOMDocument();
-      $rdf_url = 'http://rdf.chemspider.com/' . $inchi_key[0];
+      $rdf_url = 'http://rdf.chemspider.com/' . htmlentities($inchi_key[0]);
 
-      drupal_set_message(implode(', ', get_headers($rdf_url)));
       $url_headers = get_headers($rdf_url);
-      
+
       if ($url_headers[0] == 'HTTP/1.1 302 Found') {
         $rdf->load($rdf_url);
         $trivial = $rdf->getElementsByTagName('Description')->item(13)->nodeValue;
@@ -374,7 +339,7 @@ class IslandoraChem {
       }
       else {
         $trivial = 'Not found';
-        $spider_url = 'Not found';
+        $spider_url = '';
       }
 
       $cml = '<cml xmlns="http://www.xml-cml.org/schema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" title="name example" xsi:schemaLocation="http://www.xml-cml.org/schema ../../schema.xsd">' . "\n";
