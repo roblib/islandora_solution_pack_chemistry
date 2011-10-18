@@ -5,6 +5,7 @@
  *
  * Provides the functions to process and view chemical structure files.
  */
+
 class IslandoraChem {
 
   function __construct($pid = '') {
@@ -14,7 +15,7 @@ class IslandoraChem {
       $this->item = new Fedora_Item($pid);
     }
   }
-
+  
   public function showMOL() {
 
     global $base_url;
@@ -194,7 +195,7 @@ class IslandoraChem {
     $returnValue = TRUE;
 
     if (!file_exists($file . "svg")) {
-      system("obabel \"$file\" --title -osvg -xw -O\"$file\".svg &>/dev/null", $returnvalue);
+      system("obabel \"$file\" --title -osvg -xw -d -O\"$file\".svg &>/dev/null", $returnvalue);
     }
     else {
       $returnValue = '0';
@@ -217,76 +218,6 @@ class IslandoraChem {
     else {
       return $returnValue;
       print "Ingest failed";
-    }
-  }
-
-  function mol2mw($parameterArray = NULL, $dsid, $file, $file_ext) {
-    $returnValue = TRUE;
-
-    exec("obprop \"$file\"", $return);
-
-    $strMW = explode("s", $return[3]);
-    echo ltrim($strMW[2]);
-    echo "\n";
-
-    if ($returnValue == '0') {
-      $_SESSION['fedora_ingest_files']["$dsid"] = $file . $file_suffix;
-      return TRUE;
-    }
-    else {
-      return $returnValue;
-    }
-  }
-
-  function mol2smi($parameterArray = NULL, $dsid, $file, $file_ext) {
-    $file_suffix = '-' . $dsid . '.' . $file_ext;
-    $returnValue = TRUE;
-    $filename = $file . $file_suffix;
-    $filename = str_replace(" ", "-", $filename);
-    if (!file_exists($file . "xml")) {
-      system("obabel \"$file\" -o smi -xn -O\"$filename\" > /dev/null 2>&1", $returnValue);
-    }
-    else {
-      $returnValue = '0';
-    }
-    $returnValue = '0';
-
-    if ($returnValue == '0') {
-      $_SESSION['fedora_ingest_files']["$dsid"] = $filename;
-      return TRUE;
-    }
-    else {
-      return $returnValue;
-    }
-  }
-
-  function chem2rdf($parameterArray = NULL, $dsid, $file, $file_ext) {
-    $file_suffix = '_' . $dsid . '.' . $file_ext;
-    $returnValue = TRUE;
-    $filename = $file . $file_suffix;
-    $filename = str_replace(" ", "-", $filename);
-
-    exec("obabel \"$file\" -oinchi -xK", $inchi_key);
-    $inchi_key = $inchi_key[0];
-
-    $url = 'http://rdf.chemspider.com/' . $inchi_key;
-
-    if (!file_exists($filename)) {
-      $xml = new DOMDocument();
-      $xml->load($url);
-      $xml->save($filename);
-    }
-    else {
-      $returnValue = '0';
-    }
-    $returnValue = '0';
-
-    if ($returnValue == '0') {
-      $_SESSION['fedora_ingest_files']["$dsid"] = $filename;
-      return TRUE;
-    }
-    else {
-      return $returnValue;
     }
   }
 
@@ -377,6 +308,7 @@ class IslandoraChem {
       $cml .= '<metadata id="m1" name="dc:identifier" content="' . $spider_url . '" />' . "\n";
       $cml .= '</molecule>' . "\n";
       $cml .= '</cml>';
+      
       fwrite($fh, $cml);
       fclose($fh);
       drupal_set_message('CML file created!');

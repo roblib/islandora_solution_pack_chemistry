@@ -10,6 +10,8 @@
         <type>chemical/x-qchem-input</type>
         <type>chemical/x-qchem-output</type>
         <type>text/xml</type>
+        <type>text/plain</type>
+        <type>application/xml</type>
     </mimetypes>
     <ingest_rules>
         <rule>
@@ -19,6 +21,7 @@
             <applies_to>chemical/x-xyz</applies_to>
             <applies_to>chemical/x-gamess-output</applies_to>
             <applies_to>chemical/x-qchem-output</applies_to>
+            <applies_to>text/xml</applies_to>
             <ingest_methods>
                 <ingest_method class="IslandoraChem" dsid="TN"
                     file="chem.inc" method="chem2jpg"
@@ -41,8 +44,8 @@
                     modified_files_ext="mol" module="islandora_chem_sp">
                 </ingest_method>
                 <ingest_method class="IslandoraChem" dsid="CML"
-                    file="chem.inc" method="chem2cml" 
-                    modified_files_ext="cml" module="islandora_chem_sp">
+                    file="chem.inc" method="chem2cml" dscontrolgroup="X"
+                    modified_files_ext="xml" module="islandora_chem_sp">
                 </ingest_method>
             </ingest_methods>
         </rule>
@@ -55,7 +58,6 @@
       file="chem.inc" method="showMOL" 
       module="islandora_chem_sp"/>
         </datastream>
-        <datastream dsid="CML"></datastream>
         <datastream dsid="INPUT"></datastream>
         <datastream dsid="CODE"></datastream>
         <datastream dsid="QDC"></datastream>
