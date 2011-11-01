@@ -1,2 +1,8 @@
 Chemistry Solution Pack for Islandora
 Loads all required Fedora Objects, and creates an empty collection object to accept ingested files related to chemistry.
+
+- Dependencies
+
+This module requires OpenBabel (openbabel.org) to be installed for the basic functionality to work. OpenBabel converts the chemical structure files into a common format, creates images from them and extracts useful chemical data. All of this is saved with the input file upon ingest into the Fedora repository.
+ChemDoodleWeb (http://web.chemdoodle.com/) is used as a viewer for the object and allows a 3D representation of the molecule to be displayed. It is also used as a molecule editor so that structures can be used for searching.
+Indigo (http://ggasoftware.com/opensource/indigo) is required, along with a couple of python scripts, to create and search for molecular fingerprints. These allow for substructures to be searched and retrieved. Upon ingest the fingerprint of the molecule is stored and so this package has to be present at this point if you want to use substructure searching on all of the molecules. 
