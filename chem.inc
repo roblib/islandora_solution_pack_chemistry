@@ -190,12 +190,20 @@ class IslandoraChem {
     return $tabset;
   }
 
+  /**
+   * Function to create a standard MOL file from whatever format is ingested
+   * @param type $parameterArray
+   * @param type $dsid
+   * @param type $file
+   * @param type $file_ext
+   * @return string 
+   */
   function chem2mol($parameterArray = NULL, $dsid, $file, $file_ext) {
     $file_suffix = '-' . $dsid . '.' . $file_ext;
     $returnValue = TRUE;
     $filename = $file . $file_suffix;
     $filename = str_replace(" ", "-", $filename);
-
+//  Call openbabel and convert the file to MOL. Create the 3D structure so that it looks good in the 3D viewer
     if (!file_exists($file . "svg")) {
       system("obabel \"$file\" --title -omol -xw -O\"$filename\" --gen3D > /dev/null 2>&1", $returnValue);
     }
@@ -214,6 +222,14 @@ class IslandoraChem {
     }
   }
 
+  /**
+   * Function to create a jpg from the structure file
+   * @param type $parameterArray
+   * @param type $dsid
+   * @param type $file
+   * @param type $file_ext
+   * @return string 
+   */
   function chem2jpg($parameterArray, $dsid, $file, $file_ext) {
     $file_suffix = '-' . $dsid . '.' . $file_ext;
     $filename = $file . $file_suffix;
@@ -221,7 +237,7 @@ class IslandoraChem {
     $height = $parameterArray['height'];
     $width = $parameterArray['width'];
     $returnValue = TRUE;
-
+//  OpenBabel won't convert directly to jpg so we need to go via svg
     if (!file_exists($file . "svg")) {
       system("obabel \"$file\" --title -osvg -xw -d -O\"$file\".svg &>/dev/null", $returnvalue);
     }
@@ -229,7 +245,7 @@ class IslandoraChem {
       $returnValue = '0';
     }
     $returnValue = '0';
-
+//  Once the svg is created we need to convert it to jpg using imagemagick
     if (!file_exists($filename)) {
       system("convert \"$file\".svg -resize \"$width\"x\"$width\" -gravity center -extent \"$width\"x\"$width\" \"$filename\" 2>&1 &", $returnValue);
       unlink($file . '.svg');
@@ -249,6 +265,14 @@ class IslandoraChem {
     }
   }
 
+  /**
+   * Function to generate data from structure file and create an XML file
+   * @param type $parameterArray
+   * @param type $dsid
+   * @param type $file
+   * @param type $file_ext
+   * @return string 
+   */
   public function chem2cml($parameterArray = NULL, $dsid, $file, $file_ext) {
     module_load_include('inc', 'fedora_repository', 'api/fedora_item');
     module_load_include('inc', 'islandora_chem_sp', 'helper');
@@ -256,18 +280,17 @@ class IslandoraChem {
     $returnValue = TRUE;
     $filename = $file . $file_suffix;
     $filename = str_replace(" ", "-", $filename);
-
+//  Run various system calls to generate the data
     if (!file_exists($filename)) {
       exec("obprop \"$file\"", $return);
       exec("obabel \"$file\" -oinchi -xK", $inchi_key);
       exec("obabel \"$file\" -omol -O/tmp/checkmol.mol");
       exec("checkmol -c /tmp/checkmol.mol", $fragment);
-      exec('/usr/bin/python /var/www/drupal/sites/all/modules/islandora_solution_pack_chemistry/indigo-python-api-1.0.0-linux/fingerprint.py /tmp/checkmol.mol', $fingerprint2);
-      
+//      This calls a python script to generate the molecular fingerprint
+      exec('/usr/bin/python ' . drupal_get_path('module', 'islandora_chem_sp') . '/indigo-python-api-1.0.0-linux/fingerprint.py /tmp/checkmol.mol', $fingerprint2);
+//      The python script leaves some data in the string it generates so this is stripped out
       $fingerprint2 = explode(', ', str_replace(array('[', ']', 'L'), array('', '', ''), $fingerprint2[0]));
-      
-//      drupal_set_message('Fingerprint(' . count($fingerprint2) . '): ' . implode(', ', $fingerprint2));
-      
+//      The returned arrays are parsed to obtain the relevant data
       $name = $return[0];
       $name = preg_replace('!\s+!', ' ', $name);
       $name = str_replace('"', '', $name);
@@ -288,6 +311,7 @@ class IslandoraChem {
       $inchi = preg_replace('!\s+!', ' ', $inchi);
       $inchi_array = explode(' ', $inchi);
       $inchi_value = $inchi_array[1];
+//      The chemspider API is queried to retrieve the IUPAC name of the compound
       $rdf = new DOMDocument();
       $rdf_url = 'http://rdf.chemspider.com/' . htmlentities($inchi_key[0]);
 
@@ -296,7 +320,7 @@ class IslandoraChem {
       if ($url_headers[0] == 'HTTP/1.1 302 Found') {
         $rdf->load($rdf_url);
         $trivial = $rdf->getElementsByTagName('Description')->item(13)->nodeValue;
-
+//    The URL to the chemspider entry is also generated
         if ($rdf->getElementsByTagName('Description')->item(1)) {
           $spider_url = $rdf->getElementsByTagName('Description')->item(1)->getAttribute('rdf:about');
         }
@@ -310,11 +334,12 @@ class IslandoraChem {
       }
 
       $fragment = trim(str_replace(';', ' ', $fragment[0]));
-
+//    The molecular fingerprint consists of 117 values which are put into a MySQL db
+//    This allows for substructure searching using a bitwise comparison
       for ($i = 0; $i < 117; $i++) {
         ${fpv2 . $i} = $fingerprint2[$i];
       }
-      
+//    A check is done initially to see if this molecule has been stored before
       $query2 = db_query("SELECT id FROM {islandora_chem_fingerprints2} WHERE inchikey = '%s'", $inchi_key[0]);
 
       while ($obj2 = db_fetch_object($query2)) {
@@ -327,7 +352,7 @@ class IslandoraChem {
           drupal_set_message(t('Database update failed!', 'warning'));
         }
       }
-      
+//      The XML is created and populated with the data obtained above
       $dom = new DOMDocument();
 
       $cml = $dom->createElementNS("http://vre.upei.ca/cml/", "cml:cml");
@@ -341,7 +366,7 @@ class IslandoraChem {
       $xmltrivial->setAttribute("id", "n0");
       $xmltrivial->setAttribute("convention", "IUPAC:trivial");
       $xmlname->appendChild($xmltrivial);
-
+//    Synonyms are retrieved from the pubchem/NCI db and added to the XML for searching
       $url = 'http://cactus.nci.nih.gov/chemical/structure/' . urlencode($inchi_key[0]) . '/names/xml';
 
       $iupac_xml = new DOMDocument();
