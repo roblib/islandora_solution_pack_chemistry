@@ -5,7 +5,6 @@
  *
  * Provides the functionality to process and view chemical structure files.
  */
-
 define('ISLANDORA_CHEM_SP_MODS_FORM_NAME', 'Islandora Chem MODS Form');
 
 function islandora_chem_sp_required_fedora_objects() {
@@ -45,7 +44,6 @@ function islandora_chem_sp_required_fedora_objects() {
           'datastream_file' => "$module_path/xml/CHEMCM.xml",
           'cmodel' => 'fedora-system:ContentModel-3.0',
         ),
-
         array(
           'pid' => 'islandora:sp_chem_collection',
           'label' => 'Chemistry Collection',
@@ -68,3 +66,187 @@ function islandora_chem_sp_required_fedora_objects() {
   );
 }
 
+function islandora_chem_sp_menu() {
+  $items = array();
+  $items['structure_search'] = array(
+    'title' => t('Structure search'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('islandora_chem_sp_structure_search_form'),
+    'type' => MENU_NORMAL_ITEM, //MENU_CALLBACK,
+    'access arguments' => array('access administration pages'),
+  );
+
+  $items['inchi_search'] = array(
+    'title' => t('Structure search'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('islandora_chem_sp_inchi_search_form'),
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('access administration pages'),
+  );
+
+  $items['fragment_search'] = array(
+    'title' => t('Fragment search'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('islandora_chem_sp_fragment_search_form'),
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('access administration pages'),
+  );
+
+  $items['substructure_search'] = array(
+    'title' => t('Substructure search'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('islandora_chem_sp_substructure_search_form'),
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('access administration pages'),
+  );
+
+  return $items;
+}
+
+function islandora_chem_sp_structure_search_form($form_state) {
+
+  $pathTojs = drupal_get_path('module', 'islandora_chem_sp') . '/js/';
+
+  $form = array();
+
+  drupal_add_css($pathTojs . 'ChemDoodleWeb/install/ChemDoodleWeb.css');
+  drupal_add_css($pathTojs . 'ChemDoodleWeb/install/sketcher/jquery-ui-1.8.7.custom.css');
+  drupal_add_js($pathTojs . 'ChemDoodleWeb/install/ChemDoodleWeb-libs.js');
+  drupal_add_js($pathTojs . 'ChemDoodleWeb/install/ChemDoodleWeb.js');
+  drupal_add_js($pathTojs . 'ChemDoodleWeb/install/sketcher/jquery-ui-1.8.7.custom.min.js');
+  drupal_add_js($pathTojs . 'ChemDoodleWeb/install/sketcher/ChemDoodleWeb-sketcher.js');
+  drupal_add_js($pathTojs . 'encoder.js');
+
+  $content1 = <<<JS
+    <script>
+                     ChemDoodle.ELEMENT['H'].jmolColor = 'black';
+ 
+  ChemDoodle.ELEMENT['S'].jmolColor = '#B9A130';
+  // initializes the SketcherCanvas
+  var sketcher = new ChemDoodle.SketcherCanvas('sketcher', 500, 300, '$pathTojs/ChemDoodleWeb/install/sketcher/icons/', ChemDoodle.featureDetection.supports_touch(), false);
+  // sets terminal carbon labels to display
+  sketcher.specs.atoms_displayTerminalCarbonLabels_2D = true;
+  // sets atom labels to be colored by JMol colors, which are easy to recognize
+  sketcher.specs.atoms_useJMOLColors = true;
+  // the following two settings add overlap clear widths, so that some depth is introduced to overlapping bonds
+  sketcher.specs.bonds_clearOverlaps_2D = true;
+  sketcher.specs.bonds_overlapClearWidth_2D = 2;
+  // the component needs to be repainted here because we do not call the <em>Canvas.loadMolecule()</em> function
+  sketcher.repaint();
+  
+function molecule() {
+  var mol = sketcher.getMolecule();
+  var wmol = new ChemDoodle.io.MOLInterpreter();
+  var wwmol = wmol.write(mol);
+
+  wwmol = wwmol.replace( /:\/\//g, 'colon');
+  wwmol = wwmol.replace( /\&/g, '&amp');
+  wwmol = wwmol.replace( /\\n/g, '.nl.');
+  wwmol = wwmol.replace( /\ /g, '.sp.');
+
+  window.location = "http://192.168.56.195/inchi_search/" + wwmol;
+ } 
+ 
+ function fragment() {
+  var mol = sketcher.getMolecule();
+  var wmol = new ChemDoodle.io.MOLInterpreter();
+  var wwmol = wmol.write(mol);
+
+  wwmol = wwmol.replace( /:\/\//g, 'colon');
+  wwmol = wwmol.replace( /\&/g, '&amp');
+  wwmol = wwmol.replace( /\\n/g, '.nl.');
+  wwmol = wwmol.replace( /\ /g, '.sp.');
+
+  window.location = "http://192.168.56.195/fragment_search/" + wwmol;
+ } 
+
+function substructure() {
+  var mol = sketcher.getMolecule();
+  var wmol = new ChemDoodle.io.MOLInterpreter();
+  var wwmol = wmol.write(mol);
+
+  wwmol = wwmol.replace( /:\/\//g, 'colon');
+  wwmol = wwmol.replace( /\&/g, '&amp');
+  wwmol = wwmol.replace( /\\n/g, '.nl.');
+  wwmol = wwmol.replace( /\ /g, '.sp.');
+
+  window.location = "http://192.168.56.195/substructure_search/" + wwmol;
+ } 
+                 </script></BR>
+JS;
+
+  $button = '<form><input type="button" value="Search" onclick="molecule()" /><input type="button" value="Fragment Search" onclick="fragment()" /><input type="button" value="Substructure Search" onclick="substructure()" /></form>';
+
+  $form['sketcher'] = array(
+    '#value' => $content1 . $button,
+  );
+
+  return $form;
+}
+
+function islandora_chem_sp_inchi_search_form($form_state, $mol = NULL) {
+
+  $mol = str_replace('colon', '://', $mol);
+  $mol = str_replace('.nl.', "\n", $mol);
+  $mol = str_replace('.sp.', " ", $mol);
+
+  $file = '/tmp/tmp.mol';
+  $fh = fopen($file, 'w');
+  fwrite($fh, $mol);
+  fclose($fh);
+
+  exec("obabel \"$file\" -oinchi -xK", $inchi_key);
+
+  drupal_goto('islandora/solr/search/cml.inchikey:' . $inchi_key[0]);
+}
+
+function islandora_chem_sp_fragment_search_form($form_state, $mol = NULL) {
+
+  $mol = str_replace('colon', '://', $mol);
+  $mol = str_replace('.nl.', "\n", $mol);
+  $mol = str_replace('.sp.', " ", $mol);
+
+  $file = '/tmp/tmp.mol';
+  $fh = fopen($file, 'w');
+  fwrite($fh, $mol);
+  fclose($fh);
+
+  exec("obabel \"$file\" -omol -O\"$file\"");
+  exec("checkmol -c \"$file\"", $fragment);
+
+  $fragments = str_replace(';', ' ', $fragment[0]);
+
+  drupal_goto('islandora/solr/search/cml.fragments:' . $fragments);
+}
+
+function islandora_chem_sp_substructure_search_form($form_state, $mol = NULL) {
+
+  module_load_include('inc', 'islandora_chem_sp', 'helper');
+
+  $mol = str_replace('colon', '://', $mol);
+  $mol = str_replace('.nl.', "\n", $mol);
+  $mol = str_replace('.sp.', " ", $mol);
+
+  $file = '/tmp/tmp.mol';
+  $fh = fopen($file, 'w');
+  fwrite($fh, $mol);
+  fclose($fh);
+
+  exec("obabel \"$file\" -omol -O/tmp/tmp2.mol");
+
+  exec('/usr/bin/python /var/www/drupal/sites/all/modules/islandora_solution_pack_chemistry/indigo-python-api-1.0.0-linux/fingerprint_search.py /tmp/tmp2.mol', $fingerprint2);
+
+  $result = db_query("select inchikey from {islandora_chem_fingerprints2} where" . $fingerprint2[0]);
+
+  while ($obj = db_fetch_object($result)) {
+    $inchikey = $obj->inchikey;
+
+    $inchikeys .= 'cml.inchikey:' . $inchikey . ' or ';
+  }
+
+  drupal_goto('islandora/solr/search/' . $inchikeys);
+}
+
+function islandora_chem_sp_block() {
+  
+}

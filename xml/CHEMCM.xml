@@ -44,7 +44,7 @@
                     modified_files_ext="mol" module="islandora_chem_sp">
                 </ingest_method>
                 <ingest_method class="IslandoraChem" dsid="CML"
-                    file="chem.inc" method="chem2cml" dscontrolgroup="X"
+                    file="chem.inc" method="chem2cml"
                     modified_files_ext="xml" module="islandora_chem_sp">
                 </ingest_method>
             </ingest_methods>
@@ -63,8 +63,8 @@
         <datastream dsid="QDC"></datastream>
     </datastreams>
     <ingest_form dsid="QDC" page="2">
-        <form_builder_method class="DemoFormBuilder" file="plugins/DemoFormBuilder.inc"
-            handler="handleQDCForm" method="buildQDCForm" module=""/>
+        <form_builder_method class="DemoFormBuilder" file="DemoFormBuilder.inc"
+            handler="handleQDCForm" method="buildQDCForm" module="islandora_chem_sp"/>
         <form_elements>
             <element label="Title/Caption/Image Name" name="dc:title" required="true"
                 type="textfield">
