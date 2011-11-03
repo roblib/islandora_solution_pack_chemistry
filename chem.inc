@@ -275,19 +275,38 @@ class IslandoraChem {
    */
   public function chem2cml($parameterArray = NULL, $dsid, $file, $file_ext) {
     module_load_include('inc', 'fedora_repository', 'api/fedora_item');
-    module_load_include('inc', 'islandora_chem_sp', 'helper');
     $file_suffix = '_' . $dsid . '.' . $file_ext;
     $returnValue = TRUE;
     $filename = $file . $file_suffix;
     $filename = str_replace(" ", "-", $filename);
 //  Run various system calls to generate the data
     if (!file_exists($filename)) {
-      exec("obprop \"$file\"", $return);
-      exec("obabel \"$file\" -oinchi -xK", $inchi_key);
-      exec("obabel \"$file\" -omol -O/tmp/checkmol.mol");
-      exec("checkmol -c /tmp/checkmol.mol", $fragment);
+      exec("obprop \"$file\"", $return, $returnValue1);
+      if ($returnValue1 != '1') {
+        drupal_set_message(t('obprop failed to run properly'), 'error');
+        return $returnValue1;
+        }
+      exec("obabel \"$file\" -oinchi -xK", $inchi_key, $returnValue2);
+      if ($returnValue2 != '0') {
+        drupal_set_message(t('The InChIKey could not be calculated'), 'error');
+        return $returnValue2;
+        }
+      exec("obabel \"$file\" -omol -O/tmp/checkmol.mol", $checkreturn, $returnValue3);
+      if ($returnValue3 != '0') {
+        drupal_set_message(t('The MOL file could not be generated'), 'error');
+        return $returnValue3;
+        }
+      exec("checkmol -c /tmp/checkmol.mol", $fragment, $returnValue4);
+      if ($returnValue4 != '0') {
+        drupal_set_message(t('checkmol failed to run properly'), 'error');
+        return $returnValue4;
+      }
 //      This calls a python script to generate the molecular fingerprint
-      exec('/usr/bin/python ' . drupal_get_path('module', 'islandora_chem_sp') . '/indigo-python-api-1.0.0-linux/fingerprint.py /tmp/checkmol.mol', $fingerprint2);
+      exec('/usr/bin/python ' . drupal_get_path('module', 'islandora_chem_sp') . '/indigo-python-api-1.0.0-linux/fingerprint.py /tmp/checkmol.mol', $fingerprint2, $returnValue5);
+      if ($returnValue5 != '0') {
+        drupal_set_message(t('The molecular fingerprint could not be calculated'), 'error');
+        return $returnValue5;
+        }
 //      The python script leaves some data in the string it generates so this is stripped out
       $fingerprint2 = explode(', ', str_replace(array('[', ']', 'L'), array('', '', ''), $fingerprint2[0]));
 //      The returned arrays are parsed to obtain the relevant data
@@ -342,6 +361,8 @@ class IslandoraChem {
 //    A check is done initially to see if this molecule has been stored before
       $query2 = db_query("SELECT id FROM {islandora_chem_fingerprints2} WHERE inchikey = '%s'", $inchi_key[0]);
 
+      $test2 = NULL;
+      
       while ($obj2 = db_fetch_object($query2)) {
         $test2 = $obj2->id;
       }
@@ -425,12 +446,13 @@ class IslandoraChem {
       $dom->save($filename);
     }
     else {
-      $returnValue = '0';
+      drupal_set_message(t('XML file already exists in the filesytem!'), 'error');
+      $returnValue = FALSE;
     }
-    $returnValue = '0';
 
-    if ($returnValue == '0') {      
+    if ($returnValue == TRUE) {      
       $_SESSION['fedora_ingest_files']["$dsid"] = $filename;
+      $_SESSION['fedora_ingest_method']["$dsid"] = 'X';
       return TRUE;
     }
     else {
