@@ -11,6 +11,8 @@ define('ISLANDORA_CHEM_SP_MODS_FORM_NAME', 'Islandora Chem MODS Form');
  * Implementation of hook_install.
  */
 function islandora_chem_sp_install() {
+  module_load_include('inc', 'islandora_chem_sp', 'islandora_chem_sp_schema');
+  drupal_install_schema('islandora_chem_sp');
   module_load_include('inc', 'xml_form_builder', 'XMLFormDatabase');
   if (!XMLFormDatabase::Exists(ISLANDORA_CHEM_SP_MODS_FORM_NAME)) {
     $module_path = drupal_get_path('module', 'islandora_chem_sp');
@@ -60,7 +62,7 @@ function islandora_chem_sp_requirements($phase) {
     $requirements['fedora-obabel']['value'] = t("Installed");
     $requirements['fedora-obabel']['severity'] = REQUIREMENT_OK;
   }
-  
+
   return $requirements;
 }
 

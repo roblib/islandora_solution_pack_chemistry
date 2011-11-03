@@ -302,13 +302,13 @@ class IslandoraChem {
         return $returnValue4;
       }
 //      This calls a python script to generate the molecular fingerprint
-      exec('/usr/bin/python ' . drupal_get_path('module', 'islandora_chem_sp') . '/indigo-python-api-1.0.0-linux/fingerprint.py /tmp/checkmol.mol', $fingerprint2, $returnValue5);
+      exec('/usr/bin/python ' . drupal_get_path('module', 'islandora_chem_sp') . '/indigo-python-api-1.0.0-linux/fingerprint.py /tmp/checkmol.mol', $fingerprint, $returnValue5);
       if ($returnValue5 != '0') {
         drupal_set_message(t('The molecular fingerprint could not be calculated'), 'error');
         return $returnValue5;
         }
 //      The python script leaves some data in the string it generates so this is stripped out
-      $fingerprint2 = explode(', ', str_replace(array('[', ']', 'L'), array('', '', ''), $fingerprint2[0]));
+      $fingerprint = explode(', ', str_replace(array('[', ']', 'L'), array('', '', ''), $fingerprint[0]));
 //      The returned arrays are parsed to obtain the relevant data
       $name = $return[0];
       $name = preg_replace('!\s+!', ' ', $name);
@@ -356,10 +356,10 @@ class IslandoraChem {
 //    The molecular fingerprint consists of 117 values which are put into a MySQL db
 //    This allows for substructure searching using a bitwise comparison
       for ($i = 0; $i < 117; $i++) {
-        ${fpv2 . $i} = $fingerprint2[$i];
+        ${fpv2 . $i} = $fingerprint[$i];
       }
 //    A check is done initially to see if this molecule has been stored before
-      $query2 = db_query("SELECT id FROM {islandora_chem_fingerprints2} WHERE inchikey = '%s'", $inchi_key[0]);
+      $query2 = db_query("SELECT id FROM {islandora_chem_fingerprints} WHERE inchikey = '%s'", $inchi_key[0]);
 
       $test2 = NULL;
       
@@ -368,7 +368,7 @@ class IslandoraChem {
       }
 
       if (!isset($test2)) {
-        $result = db_query("INSERT INTO {islandora_chem_fingerprints2} (inchikey, fp0, fp1, fp2, fp3, fp4, fp5, fp6, fp7, fp8, fp9, fp10, fp11, fp12, fp13, fp14, fp15, fp16, fp17, fp18, fp19, fp20, fp21, fp22, fp23, fp24, fp25, fp26, fp27, fp28, fp29, fp30, fp31, fp32, fp33, fp34, fp35, fp36, fp37, fp38, fp39, fp40, fp41, fp42, fp43, fp44, fp45, fp46, fp47, fp48, fp49, fp50, fp51, fp52, fp53, fp54, fp55, fp56, fp57, fp58, fp59, fp60, fp61, fp62, fp63, fp64, fp65, fp66, fp67, fp68, fp69, fp70, fp71, fp72, fp73, fp74, fp75, fp76, fp77, fp78, fp79, fp80, fp81, fp82, fp83, fp84, fp85, fp86, fp87, fp88, fp89, fp90, fp91, fp92, fp93, fp94, fp95, fp96, fp97, fp98, fp99, fp100, fp101, fp102, fp103, fp104, fp105, fp106, fp107, fp108, fp109, fp110, fp111, fp112, fp113, fp114, fp115, fp116) VALUES ('$inchi_key[0]', $fpv20, $fpv21, $fpv22, $fpv23, $fpv24, $fpv25, $fpv26, $fpv27, $fpv28, $fpv29, $fpv210, $fpv211, $fpv212, $fpv213, $fpv214, $fpv215, $fpv216, $fpv217, $fpv218, $fpv219, $fpv220, $fpv221, $fpv222, $fpv223, $fpv224, $fpv225, $fpv226, $fpv227, $fpv228, $fpv229, $fpv230, $fpv231, $fpv232, $fpv233, $fpv234, $fpv235, $fpv236, $fpv237, $fpv238, $fpv239, $fpv240, $fpv241, $fpv242, $fpv243, $fpv244, $fpv245, $fpv246, $fpv247, $fpv248, $fpv249, $fpv250, $fpv251, $fpv252, $fpv253, $fpv254, $fpv255, $fpv256, $fpv257, $fpv258, $fpv259, $fpv260, $fpv261, $fpv262, $fpv263, $fpv264, $fpv265, $fpv266, $fpv267, $fpv268, $fpv269, $fpv270, $fpv271, $fpv272, $fpv273, $fpv274, $fpv275, $fpv276, $fpv277, $fpv278, $fpv279, $fpv280, $fpv281, $fpv282, $fpv283, $fpv284, $fpv285, $fpv286, $fpv287, $fpv288, $fpv289, $fpv290, $fpv291, $fpv292, $fpv293, $fpv294, $fpv295, $fpv296, $fpv297, $fpv298, $fpv299, $fpv2100, $fpv2101, $fpv2102, $fpv2103, $fpv2104, $fpv2105, $fpv2106, $fpv2107, $fpv2108, $fpv2109, $fpv2110, $fpv2111, $fpv2112, $fpv2113, $fpv2114, $fpv2115, $fpv2116)");
+        $result = db_query("INSERT INTO {islandora_chem_fingerprints} (inchikey, fp0, fp1, fp2, fp3, fp4, fp5, fp6, fp7, fp8, fp9, fp10, fp11, fp12, fp13, fp14, fp15, fp16, fp17, fp18, fp19, fp20, fp21, fp22, fp23, fp24, fp25, fp26, fp27, fp28, fp29, fp30, fp31, fp32, fp33, fp34, fp35, fp36, fp37, fp38, fp39, fp40, fp41, fp42, fp43, fp44, fp45, fp46, fp47, fp48, fp49, fp50, fp51, fp52, fp53, fp54, fp55, fp56, fp57, fp58, fp59, fp60, fp61, fp62, fp63, fp64, fp65, fp66, fp67, fp68, fp69, fp70, fp71, fp72, fp73, fp74, fp75, fp76, fp77, fp78, fp79, fp80, fp81, fp82, fp83, fp84, fp85, fp86, fp87, fp88, fp89, fp90, fp91, fp92, fp93, fp94, fp95, fp96, fp97, fp98, fp99, fp100, fp101, fp102, fp103, fp104, fp105, fp106, fp107, fp108, fp109, fp110, fp111, fp112, fp113, fp114, fp115, fp116) VALUES ('$inchi_key[0]', $fpv20, $fpv21, $fpv22, $fpv23, $fpv24, $fpv25, $fpv26, $fpv27, $fpv28, $fpv29, $fpv210, $fpv211, $fpv212, $fpv213, $fpv214, $fpv215, $fpv216, $fpv217, $fpv218, $fpv219, $fpv220, $fpv221, $fpv222, $fpv223, $fpv224, $fpv225, $fpv226, $fpv227, $fpv228, $fpv229, $fpv230, $fpv231, $fpv232, $fpv233, $fpv234, $fpv235, $fpv236, $fpv237, $fpv238, $fpv239, $fpv240, $fpv241, $fpv242, $fpv243, $fpv244, $fpv245, $fpv246, $fpv247, $fpv248, $fpv249, $fpv250, $fpv251, $fpv252, $fpv253, $fpv254, $fpv255, $fpv256, $fpv257, $fpv258, $fpv259, $fpv260, $fpv261, $fpv262, $fpv263, $fpv264, $fpv265, $fpv266, $fpv267, $fpv268, $fpv269, $fpv270, $fpv271, $fpv272, $fpv273, $fpv274, $fpv275, $fpv276, $fpv277, $fpv278, $fpv279, $fpv280, $fpv281, $fpv282, $fpv283, $fpv284, $fpv285, $fpv286, $fpv287, $fpv288, $fpv289, $fpv290, $fpv291, $fpv292, $fpv293, $fpv294, $fpv295, $fpv296, $fpv297, $fpv298, $fpv299, $fpv2100, $fpv2101, $fpv2102, $fpv2103, $fpv2104, $fpv2105, $fpv2106, $fpv2107, $fpv2108, $fpv2109, $fpv2110, $fpv2111, $fpv2112, $fpv2113, $fpv2114, $fpv2115, $fpv2116)");
         if ($result == FALSE) {
           drupal_set_message(t('Database update failed!', 'warning'));
         }
