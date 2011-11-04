@@ -58,9 +58,9 @@ class IslandoraChem {
       $xml2 = new SimpleXMLElement($xmlstr2);
       $title = $xml2->children('dc', TRUE);
       $xml = new SimpleXMLElement($xmlstr);
-      $ns_xml = $xml->children('cml', TRUE);
+      $ns_xml = $xml->children();
       $desc = $ns_xml->molecule->attributes()->title;
-      $mw = $ns_xml->molecule->property->scalar;
+      $mw = $ns_xml->xpath('//scalar');
       $formula = $ns_xml->molecule->formula->attributes()->concise;
       $inchi = $ns_xml->molecule->identifier->inchi;
       $inchi_key = $ns_xml->molecule->identifier->inchikey;
@@ -76,8 +76,8 @@ class IslandoraChem {
         $iupac = 'Not found';
       };
 
-      $synonym = $ns_xml->xpath("//cml:alternative[@id='s1']");
-      $fragments = $ns_xml->xpath("//cml:alternative[@id='f1']");
+      $synonym = $ns_xml->xpath("//alternative[@id='s1']");
+      $fragments = $ns_xml->xpath("//alternative[@id='f1']");
 //      Get the URL to chemspider if it exists and create a link from it
       $spider_url = $ns_xml->molecule->metadata->attributes()->content;
 
@@ -376,14 +376,14 @@ class IslandoraChem {
 //      The XML is created and populated with the data obtained above
       $dom = new DOMDocument();
 
-      $cml = $dom->createElementNS("http://vre.upei.ca/cml/", "cml:cml");
+      $cml = $dom->createElementNS("http://www.xml-cml.org/schema", "cml:cml");
       $dom->appendChild($cml);
-
-      $xmlname = $dom->createElement("cml:molecule");
+      
+      $xmlname = $dom->createElement("molecule");
       $xmlname->setAttribute("title", $name);
       $cml->appendChild($xmlname);
 
-      $xmltrivial = $dom->createElement("cml:name", $trivial);
+      $xmltrivial = $dom->createElement("name", $trivial);
       $xmltrivial->setAttribute("id", "n0");
       $xmltrivial->setAttribute("convention", "IUPAC:trivial");
       $xmlname->appendChild($xmltrivial);
@@ -403,41 +403,41 @@ class IslandoraChem {
         $synonym .= ' ' . $iupac;
       }
 
-      $xmlsynonym = $dom->createElement("cml:alternative", $synonym);
+      $xmlsynonym = $dom->createElement("alternative", $synonym);
       $xmlsynonym->setAttribute("id", "s1");
       $xmlsynonym->setAttribute("type", "synonym");
       $xmlname->appendChild($xmlsynonym);
 
-      $xmlfragment = $dom->createElement("cml:alternative", $fragment);
+      $xmlfragment = $dom->createElement("alternative", $fragment);
       $xmlfragment->setAttribute("id", "f1");
       $xmlfragment->setAttribute("type", "fragment");
       $xmlname->appendChild($xmlfragment);
 
-      $xmlproperty = $dom->createElement("cml:property");
+      $xmlproperty = $dom->createElement("property");
       $xmlproperty->setAttribute("id", "p1");
       $xmlproperty->setAttribute("title", "Molecular Weight");
       $xmlname->appendChild($xmlproperty);
 
-      $xmlscalar = $dom->createElement("cml:scalar", $mw_value);
+      $xmlscalar = $dom->createElement("scalar", $mw_value);
       $xmlscalar->setAttribute("id", "s1");
       $xmlscalar->setAttribute("dictRef", "nonSi:mw");
       $xmlproperty->appendChild($xmlscalar);
 
-      $xmlformula = $dom->createElement("cml:formula");
+      $xmlformula = $dom->createElement("formula");
       $xmlformula->setAttribute("id", "f1");
       $xmlformula->setAttribute("concise", $mf_value);
       $xmlname->appendChild($xmlformula);
 
-      $xmlidentifier = $dom->createElement("cml:identifier");
+      $xmlidentifier = $dom->createElement("identifier");
       $xmlname->appendChild($xmlidentifier);
 
-      $xmlinchi = $dom->createElement("cml:inchi", $inchi_value);
+      $xmlinchi = $dom->createElement("inchi", $inchi_value);
       $xmlidentifier->appendChild($xmlinchi);
 
-      $xmlinchikey = $dom->createElement("cml:inchikey", $inchi_key[0]);
+      $xmlinchikey = $dom->createElement("inchikey", $inchi_key[0]);
       $xmlidentifier->appendChild($xmlinchikey);
 
-      $xmlmetadata = $dom->createElement("cml:metadata");
+      $xmlmetadata = $dom->createElement("metadata");
       $xmlmetadata->setAttribute("id", "m1");
       $xmlmetadata->setAttribute("name", "dc:identifier");
       $xmlmetadata->setAttribute("content", $spider_url);
