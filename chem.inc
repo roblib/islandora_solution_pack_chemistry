@@ -452,7 +452,7 @@ class IslandoraChem {
 
     if ($returnValue == TRUE) {      
       $_SESSION['fedora_ingest_files']["$dsid"] = $filename;
-      $_SESSION['fedora_ingest_method']["$dsid"] = 'X';
+//      $_SESSION['fedora_ingest_method']["$dsid"] = 'X';
       return TRUE;
     }
     else {
