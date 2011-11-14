@@ -5,6 +5,25 @@
         <type>chemical/x-pdb</type>
         <type>chemical/x-cdx</type>
         <type>chemical/x-xyz</type>
+        <type>chemical/x-chemdraw</type>
+        <type>chemical/x-cif</type>
+        <type>chemical/x-gaussian-checkpoint</type>
+        <type>chemical/x-gaussian-cube</type>
+        <type>chemical/x-gaussian-input</type>
+        <type>chemical/x-gaussian-log</type>
+        <type>chemical/x-mdl-rdfile</type>
+        <type>chemical/x-mdl-rxnfile</type>
+        <type>chemical/x-mdl-sdfile</type>
+        <type>chemical/x-mdl-tgf</type>
+        <type>chemical/x-mol2</type>
+        <type>chemical/x-mopac-graph</type>
+        <type>chemical/x-mopac-input</type>
+        <type>chemical/x-mopac-out</type>
+        <type>chemical/x-mopac-vib</type>
+        <type>chemical/x-ncbi-asn1</type>
+        <type>chemical/x-ncbi-asn1-ascii</type>
+        <type>chemical/x-ncbi-asn1-binary</type>
+        <type>chemical/x-ncbi-asn1-spec</type>
         <type>chemical/x-gamess-input</type>
         <type>chemical/x-gamess-output</type>
         <type>chemical/x-qchem-input</type>
@@ -19,9 +38,27 @@
             <applies_to>chemical/x-pdb</applies_to>
             <applies_to>chemical/x-cdx</applies_to>
             <applies_to>chemical/x-xyz</applies_to>
+            <applies_to>chemical/x-chemdraw</applies_to>
+            <applies_to>chemical/x-cif</applies_to>
+            <applies_to>chemical/x-gaussian-checkpoint</applies_to>
+            <applies_to>chemical/x-gaussian-cube</applies_to>
+            <applies_to>chemical/x-gaussian-input</applies_to>
+            <applies_to>chemical/x-gaussian-log</applies_to>
+            <applies_to>chemical/x-mdl-rdfile</applies_to>
+            <applies_to>chemical/x-mdl-rxnfile</applies_to>
+            <applies_to>chemical/x-mdl-sdfile</applies_to>
+            <applies_to>chemical/x-mdl-tgf</applies_to>
+            <applies_to>chemical/x-mol2</applies_to>
+            <applies_to>chemical/x-mopac-graph</applies_to>
+            <applies_to>chemical/x-mopac-input</applies_to>
+            <applies_to>chemical/x-mopac-out</applies_to>
+            <applies_to>chemical/x-mopac-vib</applies_to>
+            <applies_to>chemical/x-ncbi-asn1</applies_to>
+            <applies_to>chemical/x-ncbi-asn1-ascii</applies_to>
+            <applies_to>chemical/x-ncbi-asn1-binary</applies_to>
+            <applies_to>chemical/x-ncbi-asn1-spec</applies_to>
             <applies_to>chemical/x-gamess-output</applies_to>
             <applies_to>chemical/x-qchem-output</applies_to>
-            <applies_to>text/xml</applies_to>
             <ingest_methods>
                 <ingest_method class="IslandoraChem" dsid="TN"
                     file="chem.inc" method="chem2jpg"

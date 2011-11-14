@@ -38,17 +38,17 @@ function islandora_chem_sp_requirements($phase) {
 
   $requirements = array();
 
-  $requirements['fedora-jmol']['title'] = t("Jmol installed");
+  $requirements['fedora-cdw']['title'] = t("ChemDoodleWeb installed");
   $module_path = drupal_get_path('module', 'islandora_chem_sp');
-  $result = file_exists($module_path . '/js/jmol/Jmol.js');
+  $result = file_exists($module_path . '/js/ChemDoodleWeb/install/ChemDoodleWeb.js');
   if (!$result) {
-    $requirements['fedora-jmol']['value'] = t('Jmol is not installed');
-    $requirements['fedora-jmol']['description'] = t('Islandora will not be able to show 3D structures. Click <a href="http://jmol.sourceforge.net/">here</a> for installation instructions');
-    $requirements['fedora-jmol']['severity'] = REQUIREMENT_WARNING;
+    $requirements['fedora-cdw']['value'] = t('ChemDoodleWeb is not installed');
+    $requirements['fedora-cdw']['description'] = t('Islandora will not be able to show 3D structures. Click <a href="http://web.chemdoodle.com/">here</a> for installation instructions');
+    $requirements['fedora-cdw']['severity'] = REQUIREMENT_WARNING;
   }
   else {
-    $requirements['fedora-jmol']['value'] = t("Installed");
-    $requirements['fedora-jmol']['severity'] = REQUIREMENT_OK;
+    $requirements['fedora-cdw']['value'] = t("Installed");
+    $requirements['fedora-cdw']['severity'] = REQUIREMENT_OK;
   }
 
   $requirements['fedora-obabel']['title'] = t("Open Babel installed");

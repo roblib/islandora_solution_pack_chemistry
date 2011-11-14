@@ -14,13 +14,14 @@ class IslandoraChem {
       $this->item = new Fedora_Item($pid);
     }
   }
-/**
- * Build the form to show the relevant datastreams for this object.
- * @global type $base_url
- * @global type $base_path
- * @global type $user
- * @return type $tabset 
- */
+
+  /**
+   * Build the form to show the relevant datastreams for this object.
+   * @global type $base_url
+   * @global type $base_path
+   * @global type $user
+   * @return type $tabset 
+   */
   public function showMOL() {
 
     global $base_url;
@@ -28,6 +29,8 @@ class IslandoraChem {
     global $user;
     module_load_include('inc', 'fedora_repository', 'ObjectHelper');
     module_load_include('inc', 'fedora_repository', 'api/fedora_item');
+
+    $fedora_url = variable_get('fedora_base_url', 'http://localhost:8080/fedora');
 
     $tabset = array();
 
@@ -53,10 +56,14 @@ class IslandoraChem {
     $xmlstr2 = $collectionHelper2->getStream($this->pid, "DC");
 //    If the CML datastream exists then display the relevant information.
 //    It's unlikely that the DC stream will exist if the CML one doesn't
+    $title = '';
+    $contributor = '';
     if (!$xmlstr == NULL) {
 //      Pull out the elements from the XML
       $xml2 = new SimpleXMLElement($xmlstr2);
-      $title = $xml2->children('dc', TRUE);
+      $ns_xml2 = $xml2->children('dc', TRUE);
+      $title = $ns_xml2->title;
+      $contributor = $ns_xml2->contributor;
       $xml = new SimpleXMLElement($xmlstr);
       $ns_xml = $xml->children();
       $desc = $ns_xml->molecule->attributes()->title;
@@ -68,7 +75,13 @@ class IslandoraChem {
 //      The formula is stored with spaces in to conform to the CML standard so we need to get rid of them
 //      Also make the numbers subscript 
       $formula2 = str_replace(' ', '', $formula);
-      $formula2 = preg_replace('/([0-9]*)/', '<sub>$1</sub>', $formula2);
+      $formula2 = preg_replace('/([0-9])/', '<sub>$1</sub>', $formula2);
+      $formula2 = str_replace('----', '<sup>4-</sup>', $formula2);
+      $formula2 = str_replace('---', '<sup>3-</sup>', $formula2);
+      $formula2 = str_replace('--', '<sup>2-</sup>', $formula2);
+      $formula2 = str_replace('++++', '<sup>4+</sup>', $formula2);
+      $formula2 = str_replace('+++', '<sup>3+</sup>', $formula2);
+      $formula2 = str_replace('++', '<sup>2+</sup>', $formula2);
 //      Clean up IUPAC name as it's usually ugly. If there isn't one then deal with it gracefully
       $iupac = $ns_xml->molecule->name;
       $iupac = ucfirst(strtolower($iupac));
@@ -78,6 +91,27 @@ class IslandoraChem {
 
       $synonym = $ns_xml->xpath("//alternative[@id='s1']");
       $fragments = $ns_xml->xpath("//alternative[@id='f1']");
+
+      $other_list = array();
+
+      $solr_url = variable_get('fedora_solr_search_url', 'http://localhost:8080/solr');
+      $solr_result = file_get_contents($solr_url . '/select?q=cml.inchikey:' . $inchi_key . '&fl=PID,dc.title,dc.contributor');
+      $inchi_search = new SimpleXMLElement($solr_result);
+      $pid_results = $inchi_search->result;
+
+      $rows2 = array();
+
+      foreach ($pid_results->children() as $child) {
+        $other_title = l($child->arr[1]->str . ' ', $base_url . '/fedora/repository/' . $child->str);
+        $other_researcher = $child->arr[0]->str;
+        $other_date = 'Date';
+//        var_dump($this->pid);
+//        var_dump($child->str);
+        if ($child->str != $this->pid) {
+          $rows2[] = array($other_title, $other_researcher, $other_date);
+        }
+      }
+
 //      Get the URL to chemspider if it exists and create a link from it
       $spider_url = $ns_xml->molecule->metadata->attributes()->content;
 
@@ -91,6 +125,7 @@ class IslandoraChem {
       $header = array();
       $rows = array(
         array('Title', $title),
+        array('Contributor(s)', $contributor),
         array('IUPAC name', $iupac),
         array('Synonyms', html_entity_decode($synonym[0])),
         array('File description', $desc),
@@ -102,7 +137,20 @@ class IslandoraChem {
         array('URL', $spider_entry),
       );
 
+      $header2 = array(
+        'Title',
+        'Researcher',
+        'Date created',
+      );
+
       $content1 .= theme('table', $header, $rows);
+      $content1 .= "</BR><B>Related entries</B></BR>";
+      if (!empty($rows2)) {
+        $content1 .= theme('table', $header2, $rows2);
+      }
+      else {
+        $content1 .= "</BR>None found";
+      }
     }
     else {
       $content1 .= '<div id="title">No XML datastream found</div>';
@@ -112,7 +160,7 @@ class IslandoraChem {
     drupal_add_js($pathTojs . 'ChemDoodleWeb/install/ChemDoodleWeb-libs.js');
     drupal_add_js($pathTojs . 'ChemDoodleWeb/install/ChemDoodleWeb.js');
 //    Grab the structure file and clean it up so that it displays in the JS viewer
-    $file = trim(file_get_contents($base_url . base_path() . 'fedora/repository/' . $this->pid . '/MOL'));
+    $file = trim(file_get_contents($fedora_url . '/objects/' . $this->pid . '/datastreams/MOL/content'));
 
     $file = str_replace("\n", '\n', $file);
     $file = str_replace("\r", '', $file);
@@ -126,7 +174,6 @@ class IslandoraChem {
                     var molecule = ChemDoodle.readMOL(molFile, 1);
                     transformBallAndStick.loadMolecule(molecule);
                  </script>';
-
 
     $tabset['first_tab']['tabs']['summary'] = array(
       '#type' => 'tabpage',
@@ -144,9 +191,19 @@ class IslandoraChem {
 //    Display the raw output file as text if it exists
     $collectionHelper_output = new CollectionClass();
     $xmlstr_output = $collectionHelper_output->getStream($this->pid, "OBJ");
-    
+
+    drupal_add_css($pathTojs . 'google-code-prettify/prettify.css');
+    drupal_add_js($pathTojs . 'google-code-prettify/prettify.js');
+
     if (!$xmlstr_output == NULL) {
-      $content3 = str_replace("\n", '</BR>', file_get_contents($base_url . base_path() . 'fedora/repository/' . $this->pid . '/OBJ'));
+      $output = str_replace("\n", '</BR>', file_get_contents($fedora_url . '/objects/' . $this->pid . '/datastreams/OBJ/content'));
+      if (strlen($output) > 1000) {
+        $content3 = substr($output, 0, 500);
+        $content3 .= ' ...' . "</BR></BR>" . '... ' . substr($output, -500, 500) . "</BR>";
+        $content3 .= l(t('Download file'), $fedora_url . '/objects/' . $this->pid . '/datastreams/OBJ/content');
+      }
+      else
+        $content3 = $output;
     }
     else {
       $content3 = '<div id="title">No OBJ datastream found</div>';
@@ -161,32 +218,32 @@ class IslandoraChem {
 //    Display the raw input file as text if it exists
     $collectionHelper_input = new CollectionClass();
     $xmlstr_input = $collectionHelper_input->getStream($this->pid, "INPUT");
-    
+
     if (!$xmlstr_input == NULL) {
-      $content4 = str_replace("\n", '</BR>', file_get_contents($base_url . base_path() . 'fedora/repository/' . $this->pid . '/INPUT'));
-      
+      $content4 = str_replace("\n", '</BR>', file_get_contents($fedora_url . '/objects/' . $this->pid . '/datastreams/INPUT/content'));
+
       $tabset['first_tab']['tabs']['input'] = array(
-      '#type' => 'tabpage',
-      '#title' => t('Input file'),
-      '#content' => $content4,
-      '#weight' => 4,
-    );
+        '#type' => 'tabpage',
+        '#title' => t('Input file'),
+        '#content' => $content4,
+        '#weight' => 4,
+      );
     }
 //    Display the raw code as text if it exists
     $collectionHelper_code = new CollectionClass();
     $xmlstr_code = $collectionHelper_code->getStream($this->pid, "CODE");
-    
+
     if (!$xmlstr_code == NULL) {
-      $content5 = str_replace("\n", '</BR>', file_get_contents($base_url . base_path() . 'fedora/repository/' . $this->pid . '/CODE'));
-      
+      $content5 = str_replace("\n", '</BR>', file_get_contents($fedora_url . '/objects/' . $this->pid . '/datastreams/CODE/content'));
+
       $tabset['first_tab']['tabs']['code'] = array(
-      '#type' => 'tabpage',
-      '#title' => t('Code'),
-      '#content' => $content5,
-      '#weight' => 5,
-    );
+        '#type' => 'tabpage',
+        '#title' => t('Code'),
+        '#content' => $content5,
+        '#weight' => 5,
+      );
     }
-    
+
     return $tabset;
   }
 
@@ -203,9 +260,9 @@ class IslandoraChem {
     $returnValue = TRUE;
     $filename = $file . $file_suffix;
     $filename = str_replace(" ", "-", $filename);
-//  Call openbabel and convert the file to MOL. Create the 3D structure so that it looks good in the 3D viewer
+//  Call openbabel and convert the file to MOL. (No longer needed - Create the 3D structure so that it looks good in the 3D viewer)
     if (!file_exists($file . "svg")) {
-      system("obabel \"$file\" --title -omol -xw -O\"$filename\" --gen3D > /dev/null 2>&1", $returnValue);
+      system("obabel \"$file\" --title -omol -xw -O\"$filename\" > /dev/null 2>&1", $returnValue);
     }
     else {
       $returnValue = '0';
@@ -285,17 +342,17 @@ class IslandoraChem {
       if ($returnValue1 != '1') {
         drupal_set_message(t('obprop failed to run properly'), 'error');
         return $returnValue1;
-        }
+      }
       exec("obabel \"$file\" -oinchi -xK", $inchi_key, $returnValue2);
       if ($returnValue2 != '0') {
         drupal_set_message(t('The InChIKey could not be calculated'), 'error');
         return $returnValue2;
-        }
+      }
       exec("obabel \"$file\" -omol -O/tmp/checkmol.mol", $checkreturn, $returnValue3);
       if ($returnValue3 != '0') {
         drupal_set_message(t('The MOL file could not be generated'), 'error');
         return $returnValue3;
-        }
+      }
       exec("checkmol -c /tmp/checkmol.mol", $fragment, $returnValue4);
       if ($returnValue4 != '0') {
         drupal_set_message(t('checkmol failed to run properly'), 'error');
@@ -306,7 +363,7 @@ class IslandoraChem {
       if ($returnValue5 != '0') {
         drupal_set_message(t('The molecular fingerprint could not be calculated'), 'error');
         return $returnValue5;
-        }
+      }
 //      The python script leaves some data in the string it generates so this is stripped out
       $fingerprint = explode(', ', str_replace(array('[', ']', 'L'), array('', '', ''), $fingerprint[0]));
 //      The returned arrays are parsed to obtain the relevant data
@@ -362,7 +419,7 @@ class IslandoraChem {
       $query2 = db_query("SELECT id FROM {islandora_chem_fingerprints} WHERE inchikey = '%s'", $inchi_key[0]);
 
       $test2 = NULL;
-      
+
       while ($obj2 = db_fetch_object($query2)) {
         $test2 = $obj2->id;
       }
@@ -378,7 +435,7 @@ class IslandoraChem {
 
       $cml = $dom->createElementNS("http://www.xml-cml.org/schema", "cml:cml");
       $dom->appendChild($cml);
-      
+
       $xmlname = $dom->createElement("molecule");
       $xmlname->setAttribute("title", $name);
       $cml->appendChild($xmlname);
@@ -450,7 +507,7 @@ class IslandoraChem {
       $returnValue = FALSE;
     }
 
-    if ($returnValue == TRUE) {      
+    if ($returnValue == TRUE) {
       $_SESSION['fedora_ingest_files']["$dsid"] = $filename;
 //      $_SESSION['fedora_ingest_method']["$dsid"] = 'X';
       return TRUE;

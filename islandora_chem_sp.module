@@ -107,6 +107,14 @@ function islandora_chem_sp_menu() {
     'access arguments' => array('access administration pages'),
   );
 
+  $items['mw_search'] = array(
+    'title' => t('Molecular weight search'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('islandora_chem_sp_mw_search_form'),
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('access administration pages'),
+  );
+
   return $items;
 }
 
@@ -117,6 +125,7 @@ function islandora_chem_sp_menu() {
  */
 function islandora_chem_sp_structure_search_form($form_state) {
 
+  global $base_url;
   $pathTojs = drupal_get_path('module', 'islandora_chem_sp') . '/js/';
 
   $form = array();
@@ -156,7 +165,7 @@ function molecule() {
   wwmol = wwmol.replace( /\\n/g, '.nl.');
   wwmol = wwmol.replace( /\ /g, '.sp.');
 
-  window.location = "http://192.168.56.195/inchi_search/" + wwmol;
+  window.location = "$base_url/inchi_search/" + wwmol;
  } 
  
  function fragment() {
@@ -169,7 +178,7 @@ function molecule() {
   wwmol = wwmol.replace( /\\n/g, '.nl.');
   wwmol = wwmol.replace( /\ /g, '.sp.');
 
-  window.location = "http://192.168.56.195/fragment_search/" + wwmol;
+  window.location = "$base_url/fragment_search/" + wwmol;
  } 
 
 function substructure() {
@@ -182,7 +191,7 @@ function substructure() {
   wwmol = wwmol.replace( /\\n/g, '.nl.');
   wwmol = wwmol.replace( /\ /g, '.sp.');
 
-  window.location = "http://192.168.56.195/substructure_search/" + wwmol;
+  window.location = "$base_url/substructure_search/" + wwmol;
  } 
                  </script></BR>
 JS;
@@ -266,7 +275,7 @@ function islandora_chem_sp_substructure_search_form($form_state, $mol = NULL) {
 // Generate the db query for the fingerprint using the python script. Python is much better at 
 // handling large numbers than PHP so as much of the work is done in the script and only the 
 // query string is passed back
-  exec('/usr/bin/python /var/www/drupal/sites/all/modules/islandora_solution_pack_chemistry/indigo-python-api-1.0.0-linux/fingerprint_search.py /tmp/tmp2.mol', $fingerprint);
+  exec('/usr/bin/python ' . drupal_get_path('module', 'islandora_chem_sp') . '/indigo-python-api-1.0.0-linux/fingerprint_search.py /tmp/tmp2.mol', $fingerprint);
 // Use the fingerprint to look up the inchikey and pass this to solr for searching. Ideally I'd use 
 // solr to search the fingerprint but it doesn't do bitwise comparisons so we need to use MySQL for
 //  that bit
@@ -281,6 +290,90 @@ function islandora_chem_sp_substructure_search_form($form_state, $mol = NULL) {
   drupal_goto('islandora/solr/search/' . $inchikeys);
 }
 
-function islandora_chem_sp_block() {
+function islandora_chem_sp_mw_search_form($form_state) {
+
+  $css = drupal_get_path('module', 'islandora_chem_sp') . '/islandora_chem_sp.css';
+  drupal_add_css($css);
+
+  $form['search_from'] = array(
+    '#type' => 'textfield',
+    '#title' => t('From'),
+    '#size' => 3,
+    '#prefix' => '<div class="mw_range_from">',
+    '#suffix' => '</div>',
+  );
+
+  $form['search_to'] = array(
+    '#type' => 'textfield',
+    '#title' => t('To'),
+    '#size' => 3,
+    '#prefix' => '<div class="mw_range_to">',
+    '#suffix' => '</div>',
+  );
+
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Search'),
+    '#prefix' => '<div class="mw_range_submit">',
+    '#suffix' => '</div>',
+  );
+
+  return $form;
+}
+
+function islandora_chem_sp_mw_search_form_submit($form, &$form_state) {
+  $from = $form_state['values']['search_from'];
+  $to = $form_state['values']['search_to'];
+
+  drupal_goto('/islandora/solr/search/cml.mw:[' . $from . '%20TO%20' . $to . ']/-');
+}
+
+function islandora_chem_sp_block($op = 'list', $delta = 0, $edit = array()) {
+  switch ($op) {
+
+    case 'list':
+      $blocks[0]['info'] = t('Molecular weight search');
+      $blocks[0]['cache'] = BLOCK_NO_CACHE;
+      return $blocks;
+
+    case 'view':
+      $block['subject'] = t('Molecular weight search');
+
+      $block['content'] = drupal_get_form('islandora_chem_sp_mw_search_form');
+
+      return $block;
+  }
+}
+
+function islandora_chem_sp_cron() {
+  module_load_include('inc', 'fedora_repository', 'api/fedora_item');
+  module_load_include('inc', 'fedora_repository', 'CollectionManagement');
+  module_load_include('inc', 'fedora_repository', 'BatchIngest');
   
+  $directory = '/var/www/drupal/sites/default/files/watch';
+  $doNotAdd = array('.', '..', '__MACOSX');
+  
+  if ($inputs = opendir($directory)) {
+    while (FALSE !== ($file_name = readdir($inputs))) {
+      if (!in_array($file_name, $doNotAdd) && is_dir($file_name) == FALSE) {
+        $ext = strrchr($file_name, '.');
+        $base = preg_replace("/$ext$/", '', $file_name);
+        $ext = substr($ext, 1);
+        if ($ext) {
+          $file_list[$base][$ext] = "$directory/" . $file_name;
+        }
+      }
+    }
+    closedir($inputs);
+  }
+  if (!$file_list == NULL) {
+    $file_list = array_chunk($file_list, 5, TRUE);
+    foreach ($file_list[0] as $label => $object_files) {
+      create_batch_objects($label, 'quantumchem:sp_chem', $object_files, 'quantumchem:sp_chem_collection', 'quantumchem', '');
+      $delete_ext = strrchr(array_shift(array_values($object_files)), '.');
+        $delete_base = preg_replace("/$delete_ext$/", '', array_shift(array_values($object_files)));
+        $mask = $delete_base . '.*';
+        array_map("unlink", glob($mask));
+    }
+  }
 }
