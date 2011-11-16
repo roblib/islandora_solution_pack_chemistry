@@ -17,13 +17,18 @@ root {
 
 .mw_range_from {
     float: left;
+    margin-bottom: 20px;
 }
 
 .mw_range_to {
-    float:right;
+    float: left;
+    margin-left: 20px;
+    margin-bottom: 20px;
 }
 
 .mw_range_submit {
-    clear:both;
+    float: right;
+    margin-top: 23px;
+    margin-bottom: 40px;
+    margin-right: 10px;
 }
-

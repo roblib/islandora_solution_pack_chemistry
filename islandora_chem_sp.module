@@ -99,8 +99,16 @@ function islandora_chem_sp_menu() {
     'access arguments' => array('access administration pages'),
   );
 
+  $items['substructure'] = array(
+    'title' => t('Substructure search intermeditate page'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('islandora_chem_sp_substructure_search_intermediate_form'),
+    'type' => MENU_CALLBACK,
+    'access arguments' => array('access administration pages'),
+  );
+  
   $items['substructure_search'] = array(
-    'title' => t('Substructure search'),
+//    'title' => t('Substructure search'),
     'page callback' => 'drupal_get_form',
     'page arguments' => array('islandora_chem_sp_substructure_search_form'),
     'type' => MENU_CALLBACK,
@@ -191,7 +199,7 @@ function substructure() {
   wwmol = wwmol.replace( /\\n/g, '.nl.');
   wwmol = wwmol.replace( /\ /g, '.sp.');
 
-  window.location = "$base_url/substructure_search/" + wwmol;
+  window.location = "$base_url/substructure/" + wwmol;
  } 
                  </script></BR>
 JS;
@@ -253,15 +261,9 @@ function islandora_chem_sp_fragment_search_form($form_state, $mol = NULL) {
   drupal_goto('islandora/solr/search/cml.fragments:' . $fragments);
 }
 
-/**
- * Transitional page for substructure searching
- * @param type $form_state
- * @param type $mol 
- */
-function islandora_chem_sp_substructure_search_form($form_state, $mol = NULL) {
-
-  module_load_include('inc', 'islandora_chem_sp', 'helper');
-// rebuild the MOL file that was passed in the URL
+function islandora_chem_sp_substructure_search_intermediate_form($form_state, $mol = NULL) {
+  
+  // rebuild the MOL file that was passed in the URL
   $mol = str_replace('colon', '://', $mol);
   $mol = str_replace('.nl.', "\n", $mol);
   $mol = str_replace('.sp.', " ", $mol);
@@ -286,8 +288,42 @@ function islandora_chem_sp_substructure_search_form($form_state, $mol = NULL) {
 
     $inchikeys .= 'cml.inchikey:' . $inchikey . ' or ';
   }
+  
+  $_SESSION['query'] = $inchikeys;
+  drupal_goto('substructure_search');
+}
 
-  drupal_goto('islandora/solr/search/' . $inchikeys);
+/**
+ * Transitional page for substructure searching
+ * @param type $form_state
+ * @param type $mol 
+ */
+function islandora_chem_sp_substructure_search_form($form_state) {
+
+  module_load_include('inc', 'islandora_solr_search', 'IslandoraSolrQueryProcessor');
+
+//  drupal_set_breadcrumb($inchikeys);
+//  drupal_goto('islandora/solr/search/' . $inchikeys);
+  
+  $inchikeys = $_SESSION['query'];
+  $_SESSION['query'] = '';
+  
+  $output = islandora_solr_search($inchikeys);
+  
+//  var_dump($output);
+  
+  $form['search'] = array(
+    '#value' => $output,
+  );
+  
+  $breadcrumb = array();
+  $breadcrumb[] = l(t('Home'), '');
+  $breadcrumb[] = l(t('Structure search'), 'structure_search');
+  $breadcrumb[] = t('Substructure search');
+  drupal_set_breadcrumb($breadcrumb);
+  
+  return $form;
+  
 }
 
 function islandora_chem_sp_mw_search_form($form_state) {
@@ -374,6 +410,10 @@ function islandora_chem_sp_cron() {
         $delete_base = preg_replace("/$delete_ext$/", '', array_shift(array_values($object_files)));
         $mask = $delete_base . '.*';
         array_map("unlink", glob($mask));
+        $delete_base = str_replace(' ', '-', $delete_base);
+        $mask = $delete_base . '.*';
+        array_map("unlink", glob($mask));
+        watchdog('islandora_chem_sp', '@object_files ingested sucessfully', array('@object_files' => implode(', ', $object_files)), WATCHDOG_NOTICE);
     }
   }
 }

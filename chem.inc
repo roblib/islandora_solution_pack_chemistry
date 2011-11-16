@@ -208,7 +208,7 @@ class IslandoraChem {
     else {
       $content3 = '<div id="title">No OBJ datastream found</div>';
     }
-    
+
     $tabset['first_tab']['tabs']['output'] = array(
       '#type' => 'tabpage',
       '#title' => t('Output file'),
@@ -296,7 +296,7 @@ class IslandoraChem {
     $returnValue = TRUE;
 //  OpenBabel won't convert directly to jpg so we need to go via svg
     if (!file_exists($file . "svg")) {
-      system("obabel \"$file\" --title -osvg -xw -d -O\"$file\".svg &>/dev/null", $returnvalue);
+      system("obabel \"$file\" -osvg -O\"$file\".svg --title -xw -c &>/dev/null", $returnvalue);
     }
     else {
       $returnValue = '0';
@@ -343,7 +343,7 @@ class IslandoraChem {
         drupal_set_message(t('obprop failed to run properly'), 'error');
         return $returnValue1;
       }
-      exec("obabel \"$file\" -oinchi -xK", $inchi_key, $returnValue2);
+      exec("obabel \"$file\" -oinchi --separate -xK", $inchi_key, $returnValue2);
       if ($returnValue2 != '0') {
         drupal_set_message(t('The InChIKey could not be calculated'), 'error');
         return $returnValue2;
@@ -354,10 +354,19 @@ class IslandoraChem {
         return $returnValue3;
       }
       exec("checkmol -c /tmp/checkmol.mol", $fragment, $returnValue4);
-      if ($returnValue4 != '0') {
-        drupal_set_message(t('checkmol failed to run properly'), 'error');
-        return $returnValue4;
+      switch ($returnValue4) {
+        case 2:
+          drupal_set_message(t('checkmol could not find the specified file'), 'warning');
+          break;
+        case 3:
+          drupal_set_message(t('checkmol did not recognise the file type'), 'warning');
+          break;
       }
+
+      if ($returnValue4 != 0) {
+        $fragment = NULL;
+      }
+
 //      This calls a python script to generate the molecular fingerprint
       exec('/usr/bin/python ' . drupal_get_path('module', 'islandora_chem_sp') . '/indigo-python-api-1.0.0-linux/fingerprint.py /tmp/checkmol.mol', $fingerprint, $returnValue5);
       if ($returnValue5 != '0') {
@@ -388,6 +397,7 @@ class IslandoraChem {
       $inchi_array = explode(' ', $inchi);
       $inchi_value = $inchi_array[1];
 //      The chemspider API is queried to retrieve the IUPAC name of the compound
+      
       $rdf = new DOMDocument();
       $rdf_url = 'http://rdf.chemspider.com/' . htmlentities($inchi_key[0]);
 
@@ -445,26 +455,34 @@ class IslandoraChem {
       $xmltrivial->setAttribute("convention", "IUPAC:trivial");
       $xmlname->appendChild($xmltrivial);
 //    Synonyms are retrieved from the pubchem/NCI db and added to the XML for searching
-      $url = 'http://cactus.nci.nih.gov/chemical/structure/' . urlencode($inchi_key[0]) . '/names/xml';
+      if (isset($inchi_key[0])) {
+        $url = 'http://cactus.nci.nih.gov/chemical/structure/' . urlencode($inchi_key[0]) . '/names/xml';
 
-      $iupac_xml = new DOMDocument();
-      $iupac_xml->load($url);
-      $nodes = $iupac_xml->getElementsByTagName('item');
-      $nodeno = $nodes->length;
+        $iupac_xml = new DOMDocument();
+        $iupac_xml->load($url);
+        $nodes = $iupac_xml->getElementsByTagName('item');
+        $nodeno = $nodes->length;
 
-      $synonym = '';
+        $synonym = '';
 
-      for ($i = 0; $i < $nodeno; $i++) {
-        $iupac = $iupac_xml->getElementsByTagName('item')->item($i)->nodeValue;
-        $iupac = htmlentities(ucfirst(strtolower($iupac)));
-        $synonym .= ' ' . $iupac;
+        for ($i = 0; $i < $nodeno; $i++) {
+          $iupac = $iupac_xml->getElementsByTagName('item')->item($i)->nodeValue;
+          $iupac = htmlentities(ucfirst(strtolower($iupac)));
+          $synonym .= ' ' . $iupac;
+        }
+
+        $xmlsynonym = $dom->createElement("alternative", $synonym);
+        $xmlsynonym->setAttribute("id", "s1");
+        $xmlsynonym->setAttribute("type", "synonym");
+        $xmlname->appendChild($xmlsynonym);
       }
-
-      $xmlsynonym = $dom->createElement("alternative", $synonym);
-      $xmlsynonym->setAttribute("id", "s1");
-      $xmlsynonym->setAttribute("type", "synonym");
-      $xmlname->appendChild($xmlsynonym);
-
+      else {
+        $xmlsynonym = $dom->createElement("alternative", 'None found');
+        $xmlsynonym->setAttribute("id", "s1");
+        $xmlsynonym->setAttribute("type", "synonym");
+        $xmlname->appendChild($xmlsynonym);
+      }
+      
       $xmlfragment = $dom->createElement("alternative", $fragment);
       $xmlfragment->setAttribute("id", "f1");
       $xmlfragment->setAttribute("type", "fragment");
@@ -518,4 +536,3 @@ class IslandoraChem {
   }
 
 }
-
