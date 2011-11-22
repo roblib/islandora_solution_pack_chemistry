@@ -29,7 +29,9 @@ class IslandoraChem {
     global $user;
     module_load_include('inc', 'fedora_repository', 'ObjectHelper');
     module_load_include('inc', 'fedora_repository', 'api/fedora_item');
-
+    module_load_include('inc', 'islandora_chem_sp', 'FileConversion');
+    drupal_add_css(drupal_get_path('module', 'islandora_chem_sp') . 'islandora_chem_sp.css');
+    $pid = $this->pid;
     $fedora_url = variable_get('fedora_base_url', 'http://localhost:8080/fedora');
 
     $tabset = array();
@@ -74,14 +76,7 @@ class IslandoraChem {
       $mw2 = $mw[0][0];
 //      The formula is stored with spaces in to conform to the CML standard so we need to get rid of them
 //      Also make the numbers subscript 
-      $formula2 = str_replace(' ', '', $formula);
-      $formula2 = preg_replace('/([0-9])/', '<sub>$1</sub>', $formula2);
-      $formula2 = str_replace('----', '<sup>4-</sup>', $formula2);
-      $formula2 = str_replace('---', '<sup>3-</sup>', $formula2);
-      $formula2 = str_replace('--', '<sup>2-</sup>', $formula2);
-      $formula2 = str_replace('++++', '<sup>4+</sup>', $formula2);
-      $formula2 = str_replace('+++', '<sup>3+</sup>', $formula2);
-      $formula2 = str_replace('++', '<sup>2+</sup>', $formula2);
+        $formula2 = formulaCleanup($formula);
 //      Clean up IUPAC name as it's usually ugly. If there isn't one then deal with it gracefully
       $iupac = $ns_xml->molecule->name;
       $iupac = ucfirst(strtolower($iupac));
@@ -161,10 +156,7 @@ class IslandoraChem {
     drupal_add_js($pathTojs . 'ChemDoodleWeb/install/ChemDoodleWeb.js');
 //    Grab the structure file and clean it up so that it displays in the JS viewer
     $file = trim(file_get_contents($fedora_url . '/objects/' . $this->pid . '/datastreams/MOL/content'));
-
-    $file = str_replace("\n", '\n', $file);
-    $file = str_replace("\r", '', $file);
-    $file = 'Molecule Name\n' . $file;
+    $file = molClean($file);
 //    Put in the JS for the viewer and load the MOL file
     $content2 = '<script>
                     var transformBallAndStick = new ChemDoodle.TransformCanvas3D("transformBallAndStick", 250, 250);
@@ -192,17 +184,33 @@ class IslandoraChem {
     $collectionHelper_output = new CollectionClass();
     $xmlstr_output = $collectionHelper_output->getStream($this->pid, "OBJ");
 
-    drupal_add_css($pathTojs . 'google-code-prettify/prettify.css');
-    drupal_add_js($pathTojs . 'google-code-prettify/prettify.js');
-
+     $output = '';
+     
+      $downloadLink = $base_url . '/download/' . $this->pid;
+      $output .= <<<JS
+    <script>
+                  function download() { 
+        window.open("$downloadLink", 'Download');
+        }   
+                 </script></BR>
+JS;
+      
+      $output .= '<form><input type="button" value="Download" onclick="download()" /></form></BR>';
+    
     if (!$xmlstr_output == NULL) {
-      $output = str_replace("\n", '</BR>', file_get_contents($fedora_url . '/objects/' . $this->pid . '/datastreams/OBJ/content'));
+      $output .= str_replace("\n", '</BR>', file_get_contents($fedora_url . '/objects/' . $this->pid . '/datastreams/OBJ/content'));
       if (strlen($output) > 1000) {
         $content3 = substr($output, 0, 500);
         $content3 .= ' ...' . "</BR></BR>" . '... ' . substr($output, -500, 500) . "</BR>";
-        $content3 .= l(t('Download file'), $fedora_url . '/objects/' . $this->pid . '/datastreams/OBJ/content');
+        
+        $download = array(
+          '#type' => 'submit',
+          '#value' => t('Download'),
+        );
+        
       }
       else
+        
         $content3 = $output;
     }
     else {
@@ -232,14 +240,14 @@ class IslandoraChem {
 //    Display the raw code as text if it exists
     $collectionHelper_code = new CollectionClass();
     $xmlstr_code = $collectionHelper_code->getStream($this->pid, "CODE");
-
+    
     if (!$xmlstr_code == NULL) {
-      $content5 = str_replace("\n", '</BR>', file_get_contents($fedora_url . '/objects/' . $this->pid . '/datastreams/CODE/content'));
+      $content5 = str_replace("\n", '</BR>', SyntaxHighlight::process(file_get_contents($fedora_url . '/objects/' . $this->pid . '/datastreams/CODE/content')));
 
       $tabset['first_tab']['tabs']['code'] = array(
         '#type' => 'tabpage',
         '#title' => t('Code'),
-        '#content' => $content5,
+        '#content' => '<code>' . $content5 . '</code>',
         '#weight' => 5,
       );
     }
@@ -527,7 +535,6 @@ class IslandoraChem {
 
     if ($returnValue == TRUE) {
       $_SESSION['fedora_ingest_files']["$dsid"] = $filename;
-//      $_SESSION['fedora_ingest_method']["$dsid"] = 'X';
       return TRUE;
     }
     else {

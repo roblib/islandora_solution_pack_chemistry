@@ -32,3 +32,22 @@ root {
     margin-bottom: 40px;
     margin-right: 10px;
 }
+
+.codecomment {
+    color: #027ac6;
+}
+
+pre { 
+	font-family: Courier New, Bitstream Vera Sans Mono, monospace; 
+	font-size: 9pt;
+	border-top: 1px solid #333;
+	border-bottom: 1px solid #333;
+	padding: 0.4em;
+	color: #000;
+}
+pre span.N{ color:green; } /* Numbers */
+pre span.S{ color:blue } /* Strings */
+pre span.C{ color:gray; } /* Comments */
+pre span.K{ color:red; } /* Keywords */
+pre span.V{ color:#70d6ff; } /* Vars */
+pre span.D{ color:#ff9a5d; } /* Defines */
