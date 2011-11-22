@@ -72,11 +72,14 @@ class IslandoraChem {
       $mw = $ns_xml->xpath('//scalar');
       $formula = $ns_xml->molecule->formula->attributes()->concise;
       $inchi = $ns_xml->molecule->identifier->inchi;
-      $inchi_key = $ns_xml->molecule->identifier->inchikey;
+      // Loop through each of the inchikeys as there may be multiple in a cluster
+      foreach ($ns_xml->molecule->identifier->inchikey as $key) {
+        $inchi_key[] = $key;
+      }
       $mw2 = $mw[0][0];
 //      The formula is stored with spaces in to conform to the CML standard so we need to get rid of them
 //      Also make the numbers subscript 
-        $formula2 = formulaCleanup($formula);
+      $formula2 = formulaCleanup($formula);
 //      Clean up IUPAC name as it's usually ugly. If there isn't one then deal with it gracefully
       $iupac = $ns_xml->molecule->name;
       $iupac = ucfirst(strtolower($iupac));
@@ -88,25 +91,26 @@ class IslandoraChem {
       $fragments = $ns_xml->xpath("//alternative[@id='f1']");
 
       $other_list = array();
+      // Again it is possible to have more than once inchi key if the object is a cluster so we have to query for each one
+      foreach ($inchi_key as $key) {
+        $solr_url = variable_get('fedora_solr_search_url', 'http://localhost:8080/solr');
+        $solr_result = file_get_contents($solr_url . '/select?q=cml.inchikey:' . $key . '&fl=PID,dc.title,dc.contributor');
+        $inchi_search = new SimpleXMLElement($solr_result);
+        $pid_results = $inchi_search->result;
 
-      $solr_url = variable_get('fedora_solr_search_url', 'http://localhost:8080/solr');
-      $solr_result = file_get_contents($solr_url . '/select?q=cml.inchikey:' . $inchi_key . '&fl=PID,dc.title,dc.contributor');
-      $inchi_search = new SimpleXMLElement($solr_result);
-      $pid_results = $inchi_search->result;
+        $rows2 = array();
 
-      $rows2 = array();
-
-      foreach ($pid_results->children() as $child) {
-        $other_title = l($child->arr[1]->str . ' ', $base_url . '/fedora/repository/' . $child->str);
-        $other_researcher = $child->arr[0]->str;
-        $other_date = 'Date';
+        foreach ($pid_results->children() as $child) {
+          $other_title = l($child->arr[1]->str . ' ', $base_url . '/fedora/repository/' . $child->str);
+          $other_researcher = $child->arr[0]->str;
+          $other_date = 'Date';
 //        var_dump($this->pid);
 //        var_dump($child->str);
-        if ($child->str != $this->pid) {
-          $rows2[] = array($other_title, $other_researcher, $other_date);
+          if ($child->str != $this->pid) {
+            $rows2[] = array($other_title, $other_researcher, $other_date);
+          }
         }
       }
-
 //      Get the URL to chemspider if it exists and create a link from it
       $spider_url = $ns_xml->molecule->metadata->attributes()->content;
 
@@ -127,7 +131,7 @@ class IslandoraChem {
         array('Molecular weight', $mw2),
         array('Molecular formula', $formula2),
         array('Inchi', $inchi),
-        array('Inchikey', $inchi_key),
+        array('Inchikey(s)', implode(', ', $inchi_key)),
         array('Fragments', $fragments[0]),
         array('URL', $spider_entry),
       );
@@ -184,33 +188,31 @@ class IslandoraChem {
     $collectionHelper_output = new CollectionClass();
     $xmlstr_output = $collectionHelper_output->getStream($this->pid, "OBJ");
 
-     $output = '';
-     
-      $downloadLink = $base_url . '/download/' . $this->pid;
-      $output .= <<<JS
+    $output = '';
+
+    $downloadLink = $base_url . '/download/' . $this->pid;
+    $output .= <<<JS
     <script>
                   function download() { 
         window.open("$downloadLink", 'Download');
         }   
                  </script></BR>
 JS;
-      
-      $output .= '<form><input type="button" value="Download" onclick="download()" /></form></BR>';
-    
+
+    $output .= '<form><input type="button" value="Download" onclick="download()" /></form></BR>';
+
     if (!$xmlstr_output == NULL) {
       $output .= str_replace("\n", '</BR>', file_get_contents($fedora_url . '/objects/' . $this->pid . '/datastreams/OBJ/content'));
       if (strlen($output) > 1000) {
         $content3 = substr($output, 0, 500);
         $content3 .= ' ...' . "</BR></BR>" . '... ' . substr($output, -500, 500) . "</BR>";
-        
+
         $download = array(
           '#type' => 'submit',
           '#value' => t('Download'),
         );
-        
       }
       else
-        
         $content3 = $output;
     }
     else {
@@ -240,7 +242,7 @@ JS;
 //    Display the raw code as text if it exists
     $collectionHelper_code = new CollectionClass();
     $xmlstr_code = $collectionHelper_code->getStream($this->pid, "CODE");
-    
+
     if (!$xmlstr_code == NULL) {
       $content5 = str_replace("\n", '</BR>', SyntaxHighlight::process(file_get_contents($fedora_url . '/objects/' . $this->pid . '/datastreams/CODE/content')));
 
@@ -356,6 +358,7 @@ JS;
         drupal_set_message(t('The InChIKey could not be calculated'), 'error');
         return $returnValue2;
       }
+      drupal_set_message(implode(', ', $inchi_key));
       exec("obabel \"$file\" -omol -O/tmp/checkmol.mol", $checkreturn, $returnValue3);
       if ($returnValue3 != '0') {
         drupal_set_message(t('The MOL file could not be generated'), 'error');
@@ -405,7 +408,7 @@ JS;
       $inchi_array = explode(' ', $inchi);
       $inchi_value = $inchi_array[1];
 //      The chemspider API is queried to retrieve the IUPAC name of the compound
-      
+
       $rdf = new DOMDocument();
       $rdf_url = 'http://rdf.chemspider.com/' . htmlentities($inchi_key[0]);
 
@@ -490,7 +493,7 @@ JS;
         $xmlsynonym->setAttribute("type", "synonym");
         $xmlname->appendChild($xmlsynonym);
       }
-      
+
       $xmlfragment = $dom->createElement("alternative", $fragment);
       $xmlfragment->setAttribute("id", "f1");
       $xmlfragment->setAttribute("type", "fragment");
@@ -517,8 +520,10 @@ JS;
       $xmlinchi = $dom->createElement("inchi", $inchi_value);
       $xmlidentifier->appendChild($xmlinchi);
 
-      $xmlinchikey = $dom->createElement("inchikey", $inchi_key[0]);
-      $xmlidentifier->appendChild($xmlinchikey);
+      foreach ($inchi_key as $key) {
+        $xmlinchikey = $dom->createElement("inchikey", $key);
+        $xmlidentifier->appendChild($xmlinchikey);
+      }
 
       $xmlmetadata = $dom->createElement("metadata");
       $xmlmetadata->setAttribute("id", "m1");

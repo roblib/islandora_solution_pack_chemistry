@@ -46,8 +46,10 @@ pre {
 	color: #000;
 }
 pre span.N{ color:green; } /* Numbers */
-pre span.S{ color:blue } /* Strings */
+pre span.S{ color:#c9750f } /* Strings */
 pre span.C{ color:gray; } /* Comments */
-pre span.K{ color:red; } /* Keywords */
+pre span.K{ color:blue;
+            font-weight: bold;
+} /* Keywords */
 pre span.V{ color:#70d6ff; } /* Vars */
 pre span.D{ color:#ff9a5d; } /* Defines */
