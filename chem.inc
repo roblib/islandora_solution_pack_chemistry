@@ -460,7 +460,7 @@ JS;
       $xmlname->setAttribute("title", $name);
       $cml->appendChild($xmlname);
 
-      $xmltrivial = $dom->createElement("name", $trivial);
+      $xmltrivial = $dom->createElement("name", ucfirst(ltrim($trivial)));
       $xmltrivial->setAttribute("id", "n0");
       $xmltrivial->setAttribute("convention", "IUPAC:trivial");
       $xmlname->appendChild($xmltrivial);

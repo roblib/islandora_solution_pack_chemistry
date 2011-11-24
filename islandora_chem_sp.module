@@ -212,9 +212,11 @@ function islandora_chem_sp_cron() {
 
 function islandora_chem_sp_download_form($form_state, $pid) {
   module_load_include('inc', 'fedora_repository', 'api/fedora_item');
+  module_load_include('inc', 'islandora_chem_sp', 'FileConversion');
   $object = new Fedora_Item($pid);
   $list = $object->get_datastreams_list_as_array();
-  $ext = ltrim(strstr($list['OBJ']['MIMEType'], '-'), '-');
+//  $ext = ltrim(strstr($list['OBJ']['MIMEType'], '-'), '-');
+  $ext = system_mime_type_extension($list['OBJ']['MIMEType']);
   $fedora_url = variable_get('fedora_base_url', 'http://localhost:8080/fedora');
   $file = $fedora_url . '/objects/' . $pid . '/datastreams/OBJ/content';
   $name = str_replace(':', '-', $pid);
