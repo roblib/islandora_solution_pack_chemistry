@@ -227,6 +227,10 @@ function islandora_chem_sp_mw_search_form($form_state) {
     '#prefix' => '<div class="mw_range_submit">',
     '#suffix' => '</div>',
   );
+  
+  $form['clear'] = array(
+    '#value' => '<div class="clearfix">',
+  );
 
   return $form;
 }

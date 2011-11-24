@@ -81,6 +81,18 @@ function islandora_chem_sp_requirements($phase) {
     $requirements['fedora-obabel']['severity'] = REQUIREMENT_OK;
   }
 
+  $requirements['fedora-checkmol']['title'] = t("Checkmol installed");
+  $result = exec('checkmol');
+  if (!$result) {
+    $requirements['fedora-checkmol']['value'] = t('Checkmol is not in the path');
+    $requirements['fedora-checkmol']['description'] = t('Islandora will not be able to analyse chemistry files. Click <a href="http://merian.pch.univie.ac.at/~nhaider/cheminf/cmmm.html">here</a> for installation instructions');
+    $requirements['fedora-checkmol']['severity'] = REQUIREMENT_WARNING;
+  }
+  else {
+    $requirements['fedora-checkmol']['value'] = t("Installed");
+    $requirements['fedora-checkmol']['severity'] = REQUIREMENT_OK;
+  }
+  
   return $requirements;
 }
 
