@@ -1,6 +1,8 @@
 <?php
 
 function islandora_chem_sp_schema() {
+    $result = db_result(db_query('Select * from {islandora_chem_fingerprint}'));
+    if (!$result) {
   $schema['islandora_chem_fingerprints'] = array(
     'description' => t('This table is used to store the fingerprint of each molecule in fedora.'),
     'fields' => array(
@@ -954,4 +956,8 @@ function islandora_chem_sp_schema() {
     'indexes' => array('inchikey' => array('inchikey')),
   );
   return $schema;
+    }
+    else {
+      drupal_set_message(t('Fingerprint database already exists!', 'warning'));
+    }
 }
