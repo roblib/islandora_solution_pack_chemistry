@@ -6,6 +6,7 @@
  * Provides the functionality to process and view chemical structure files.
  */
 define('ISLANDORA_CHEM_SP_MODS_FORM_NAME', 'Islandora Chem MODS Form');
+define('ISLANDORA_CHEM_SP_MADS_FORM_NAME', 'Islandora Chem MADS Form');
 
 /**
  * Declare the objects that are required by this solution pack
@@ -22,17 +23,32 @@ function islandora_chem_sp_required_fedora_objects() {
     $definition->load($module_path . '/xml/mods_chem.xml');
     XMLFormDatabase::Create(ISLANDORA_CHEM_SP_MODS_FORM_NAME, $definition);
   }
-
+  if (!XMLFormDatabase::Exists(ISLANDORA_CHEM_SP_MADS_FORM_NAME)) {
+    $definition = new DOMDocument();
+    $definition->load($module_path . '/xml/mads_chem.xml');
+    XMLFormDatabase::Create(ISLANDORA_CHEM_SP_MADS_FORM_NAME, $definition);
+  }
   // Associates the form with the content model
-  $result = db_result(db_query('Select content_model from {islandora_content_model_forms} where  content_model = "%s" and form_name = "%s"', 'quantumchem:sp_chem', 'Islandora Chem MODS Form'));
+  $result = db_result(db_query('Select content_model from {islandora_content_model_forms} where  content_model = "%s" and form_name = "%s"', 'quantumchem:sp_chem_CM', 'Islandora Chem MODS Form'));
   if (!$result) {
     $object = new stdClass();
-    $object->content_model = 'quantumchem:sp_chem';
+    $object->content_model = 'quantumchem:sp_chem_CM';
     $object->form_name = 'Islandora Chem MODS Form';
     $object->dsid = 'MODS';
     $object->title_field = "['titleInfo']['title']";
     $object->transform = 'mods_to_dc.xsl';
     $result = drupal_write_record('islandora_content_model_forms', $object);
+  }
+
+  $result2 = db_result(db_query('Select content_model from {islandora_content_model_forms} where  content_model = "%s" and form_name = "%s"', 'quantumchem:sp_chem_researcher_CM', 'Islandora Chem MADS Form'));
+  if (!$result2) {
+    $object2 = new stdClass();
+    $object2->content_model = 'quantumchem:sp_chem_researcher_CM';
+    $object2->form_name = 'Islandora Chem MADS Form';
+    $object2->dsid = 'MADS';
+    $object2->title_field = "['titleInfo']['title']";
+    $object2->transform = 'mads_to_dc.xsl';
+    $result2 = drupal_write_record('islandora_content_model_forms', $object2);
   }
 
   return array(
@@ -41,15 +57,22 @@ function islandora_chem_sp_required_fedora_objects() {
       'title' => 'Islandora Chem Solution Pack',
       'objects' => array(
         array(
-          'pid' => 'quantumchem:sp_chem',
+          'pid' => 'quantumchem:sp_chem_CM',
           'label' => 'Islandora chemistry content model',
           'dsid' => 'ISLANDORACM',
           'datastream_file' => "$module_path/xml/CHEMCM.xml",
           'cmodel' => 'fedora-system:ContentModel-3.0',
         ),
         array(
-          'pid' => 'quantumchem:sp_chem_collection',
-          'label' => 'Chemistry Collection',
+          'pid' => 'quantumchem:sp_chem_researcher_CM',
+          'label' => 'Islandora chemistry researcher content model',
+          'dsid' => 'ISLANDORACM',
+          'datastream_file' => "$module_path/xml/CHEMRSCM.xml",
+          'cmodel' => 'fedora-system:ContentModel-3.0',
+        ),
+        array(
+          'pid' => 'quantumchem:sp_collection',
+          'label' => 'Quantumchem',
           'cmodel' => 'islandora:collectionCModel',
           'parent' => variable_get('fedora_repository_pid', 'islandora:root'),
           'datastreams' => array(
@@ -60,7 +83,41 @@ function islandora_chem_sp_required_fedora_objects() {
             ),
             array(
               'dsid' => 'COLLECTION_POLICY',
+              'datastream_file' => "$module_path/xml/COLLECTION-COLLECTION POLICY.xml",
+            ),
+          ),
+        ),
+        array(
+          'pid' => 'quantumchem:sp_chem_calculations',
+          'label' => 'Calculations',
+          'cmodel' => 'islandora:collectionCModel',
+          'parent' => 'quantumchem:sp_collection',
+          'datastreams' => array(
+            array(
+              'dsid' => 'TN',
+              'datastream_file' => "$module_path/images/Crystal_Clear_filesystem_folder_chem.png",
+              'mimetype' => 'image/png',
+            ),
+            array(
+              'dsid' => 'COLLECTION_POLICY',
               'datastream_file' => "$module_path/xml/CHEM-COLLECTION POLICY.xml",
+            ),
+          ),
+        ),
+        array(
+          'pid' => 'quantumchem:sp_chem_researchers',
+          'label' => 'Researchers',
+          'cmodel' => 'islandora:collectionCModel',
+          'parent' => 'quantumchem:sp_collection',
+          'datastreams' => array(
+            array(
+              'dsid' => 'TN',
+              'datastream_file' => "$module_path/images/Crystal_Clear_filesystem_folder_chem.png",
+              'mimetype' => 'image/png',
+            ),
+            array(
+              'dsid' => 'COLLECTION_POLICY',
+              'datastream_file' => "$module_path/xml/CHEM_RESEARCHER_POLICY.xml",
             ),
           ),
         ),
@@ -129,18 +186,18 @@ function islandora_chem_sp_menu() {
     'access arguments' => array('access administration pages'),
   );
 
-  $items['view'] = array(
-    'title' => t('View'),
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('islandora_chem_sp_view_form'),
-    'type' => MENU_NORMAL_ITEM,
-    'access arguments' => array('access administration pages'),
-  );
-
   $items['download'] = array(
     'page callback' => 'drupal_get_form',
     'page arguments' => array('islandora_chem_sp_download_form'),
     'type' => MENU_CALLBACK,
+    'access arguments' => array('access administration pages'),
+  );
+  
+  $items['researchers'] = array(
+    'title' => t('Researchers'),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('islandora_chem_sp_view_form'),
+    'type' => MENU_NORMAL_ITEM,
     'access arguments' => array('access administration pages'),
   );
 
@@ -151,27 +208,6 @@ function islandora_chem_sp_cron() {
   module_load_include('inc', 'islandora_chem_sp', 'islandora_chem_sp_cron');
 
   islandora_chem_cron();
-}
-
-function islandora_chem_sp_view_form($form_state) {
-
-  $filename = 'http://localhost:8080/solr/select?q=PID:quantumchem*&fl=PID&rows=100';
-
-  $xml = new DOMDocument();
-  $xml->load($filename);
-
-  $name = $xml->getElementsByTagName('str');
-
-
-  $xmlstr = $xml->saveXML();
-
-  for ($i = 5; $i < 30; $i++) {
-    $form['search'][$i] = array(
-      '#value' => '<img src="/fedora/repository/' . $name->item($i)->nodeValue . '/TN" alt="Big Boat" />',
-    );
-  }
-
-  return $form;
 }
 
 function islandora_chem_sp_download_form($form_state, $pid) {
@@ -196,6 +232,8 @@ function islandora_chem_sp_block($op = 'list', $delta = 0, $edit = array()) {
     case 'list':
       $blocks[0]['info'] = t('Molecular weight search');
       $blocks[0]['cache'] = BLOCK_NO_CACHE;
+      $blocks[0]['status'] = TRUE;
+      $blocks[0]['region'] = 'region-sidebar-first';
       return $blocks;
 
     case 'view':
@@ -205,4 +243,25 @@ function islandora_chem_sp_block($op = 'list', $delta = 0, $edit = array()) {
 
       return $block;
   }
+}
+
+function islandora_chem_sp_view_form($form_state) {
+
+  $filename = 'http://localhost:8080/solr/select?q=rels.isMemberOfCollection:researchers&fl=dc.identifier,dc.title&rows=100';
+
+  $xml = new DOMDocument();
+  $xml->load($filename);
+
+  $name = $xml->getElementsByTagName('str');
+
+
+  $xmlstr = $xml->saveXML();
+
+  for ($i = 3; $i < 20; $i++) {
+    $form['search'][$i] = array(
+      '#value' => l($name->item($i)->nodeValue, 'test') . '</BR>',
+    );
+  }
+
+  return $form;
 }

@@ -82,7 +82,7 @@ class IslandoraChem {
       $formula2 = formulaCleanup($formula);
 //      Clean up IUPAC name as it's usually ugly. If there isn't one then deal with it gracefully
       $iupac = $ns_xml->molecule->name;
-      $iupac = ucfirst(strtolower($iupac));
+      $iupac = ucfirst(strtolower(ltrim($iupac)));
       if ($iupac == NULL) {
         $iupac = 'Not found';
       };
@@ -124,7 +124,7 @@ class IslandoraChem {
       $header = array();
       $rows = array(
         array('Title', $title),
-        array('Contributor(s)', $contributor),
+        array('Contributor(s)', l($contributor, $base_url . '/islandora/solr/search/' . preg_replace("/\([^\)]+\)/","",$contributor) . '/-/dismax')),
         array('IUPAC name', $iupac),
         array('Synonyms', html_entity_decode($synonym[0])),
         array('File description', $desc),
@@ -358,7 +358,6 @@ JS;
         drupal_set_message(t('The InChIKey could not be calculated'), 'error');
         return $returnValue2;
       }
-      drupal_set_message(implode(', ', $inchi_key));
       exec("obabel \"$file\" -omol -O/tmp/checkmol.mol", $checkreturn, $returnValue3);
       if ($returnValue3 != '0') {
         drupal_set_message(t('The MOL file could not be generated'), 'error');
@@ -544,6 +543,114 @@ JS;
     }
     else {
       return $returnValue;
+    }
+  }
+
+  function showMADS() {
+    global $base_url;
+    global $base_path;
+    global $user;
+    module_load_include('inc', 'fedora_repository', 'ObjectHelper');
+    module_load_include('inc', 'fedora_repository', 'api/fedora_item');
+
+    $tabset = array();
+
+    $tabset['first_tab'] = array(
+      '#type' => 'tabpage',
+      '#title' => t('Description'),
+    );
+
+    $tabset['first_tab']['tabs'] = array(
+      '#type' => 'tabset',
+    );
+
+    $collectionHelper = new CollectionClass();
+    $xmlstr = $collectionHelper->getStream($this->pid, "MADS");
+    $xml = new SimpleXMLElement($xmlstr);
+
+//    var_dump($xml);
+
+    $names = $xml->authority->name->namePart;
+    $fullName = $names[0] . ' ' . $names[1];
+    $interests = $xml->authority->topic;
+    $organization = $xml->affiliation->organization;
+    $position = $xml->affiliation->position;
+    $email = $xml->affiliation->email;
+
+    $header = array();
+    
+    $rows = array(
+            array('Name', $fullName), 
+            array('Organization', $organization),
+            array('Position', $position),
+            array('Email', $email),
+            array('Interests', $interests),
+      );
+    
+    $imgPath = $base_path . drupal_get_path('module', 'islandora_chem_sp') . '/images/gnome_stock_person.png';
+    
+    $tabset['first_tab']['tabs']['image'] = array(
+      '#value' => '<img src = "' . $imgPath . '"/>',
+    );
+    
+    $tabset['first_tab']['tabs']['table'] = array(
+      '#value' => theme('table', $header, $rows),
+    );
+    
+    $calculations_list = array();
+        $solr_url = variable_get('fedora_solr_search_url', 'http://localhost:8080/solr');
+        $solr_query = $solr_url . '/select?q=dc.contributor:' . urlencode($fullName) . '&fl=PID,dc.title,cml.name';
+        $solr_result = file_get_contents($solr_query);
+        $calc_search = new SimpleXMLElement($solr_result);
+        $pid_results = $calc_search->result;
+
+        $rows2 = array();
+
+        foreach ($pid_results->children() as $child) {
+          $calc_title = l($child->arr[1]->str . ' ', $base_url . '/fedora/repository/' . $child->str);
+          $calc_name = $child->arr[0]->str;
+          $calc_date = 'Date';
+//        var_dump($this->pid);
+//        var_dump($child->str);
+          if ($child->str != $this->pid) {
+            $rows2[] = array($calc_title, ucfirst(ltrim($calc_name)), $calc_date);
+          }
+        }
+      
+        $header2 = array('Title', 'Name', 'Date');
+        
+    $content1 = "</BR><B>Associated calculations</B></BR>";
+      if (!empty($rows2)) {
+        $content1 .= theme('table', $header2, $rows2);
+      }
+      else {
+        $content1 .= "</BR>None found";
+      }
+    
+      $tabset['first_tab']['tabs']['related'] = array(
+      '#value' => $content1,
+    );
+    
+    return $tabset;
+  }
+
+  public function createResearcher() {
+
+    $dsid = 'TN';
+
+    $modulePath = drupal_get_path('module', 'islandora_chem_sp');
+
+    $filename = '/var/www/drupal/sites/all/modules/islandora_solution_pack_chemistry/images/gnome_stock_person.png';
+
+    if (file_exists($filename)) {
+    drupal_set_message('Destination:' . $filename);
+    $_SESSION['fedora_ingest_files']["$dsid"] = $filename;
+    return TRUE;
+    print "Ingest succeeded!";
+    }
+    else {
+     return FALSE;
+     print "Ingest failed!";
     }
   }
 
