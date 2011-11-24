@@ -378,7 +378,7 @@ JS;
       }
 
 //      This calls a python script to generate the molecular fingerprint
-      exec('/usr/bin/python ' . drupal_get_path('module', 'islandora_chem_sp') . '/indigo-python-api-1.0.0-linux/fingerprint.py /tmp/checkmol.mol', $fingerprint, $returnValue5);
+      exec('/opt/ActivePython-2.7/bin/python2.7 ' . drupal_get_path('module', 'islandora_chem_sp') . '/indigo-python-api-1.0.0-linux/fingerprint.py /tmp/checkmol.mol', $fingerprint, $returnValue5);
       if ($returnValue5 != '0') {
         drupal_set_message(t('The molecular fingerprint could not be calculated'), 'error');
         return $returnValue5;
