@@ -317,7 +317,7 @@ JS;
     $returnValue = '0';
 //  Once the svg is created we need to convert it to jpg using imagemagick
     if (!file_exists($filename)) {
-      system("convert \"$file\".png -resize \"$width\"x\"$width\" -gravity center -equalize -extent \"$width\"x\"$width\" \"$filename\" 2>&1 &", $returnValue);
+      system("convert \"$file\".png -resize \"$width\"x\"$width\" -gravity center -modulate 100,140 -extent \"$width\"x\"$width\" \"$filename\" 2>&1 &", $returnValue);
       unlink($file . '.png');
     }
     else {
