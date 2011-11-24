@@ -192,15 +192,7 @@ function islandora_chem_sp_menu() {
     'type' => MENU_CALLBACK,
     'access arguments' => array('view fedora collection'),
   );
-  
-  $items['researchers'] = array(
-    'title' => t('Researchers'),
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('islandora_chem_sp_view_form'),
-    'type' => MENU_NORMAL_ITEM,
-    'access arguments' => array('access administration pages'),
-  );
-
+ 
   return $items;
 }
 
@@ -251,25 +243,4 @@ function islandora_chem_sp_block($op = 'list', $delta = 0, $edit = array()) {
 
       return $block;
   }
-}
-
-function islandora_chem_sp_view_form($form_state) {
-
-  $filename = 'http://localhost:8080/solr/select?q=rels.isMemberOfCollection:researchers&fl=dc.identifier,dc.title&rows=100';
-
-  $xml = new DOMDocument();
-  $xml->load($filename);
-
-  $name = $xml->getElementsByTagName('str');
-
-
-  $xmlstr = $xml->saveXML();
-
-  for ($i = 3; $i < 20; $i++) {
-    $form['search'][$i] = array(
-      '#value' => l($name->item($i)->nodeValue, 'test') . '</BR>',
-    );
-  }
-
-  return $form;
 }
