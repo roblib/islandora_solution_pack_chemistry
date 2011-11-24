@@ -308,8 +308,8 @@ JS;
     $width = $parameterArray['width'];
     $returnValue = TRUE;
 //  OpenBabel won't convert directly to jpg so we need to go via svg
-    if (!file_exists($file . "svg")) {
-      system("obabel \"$file\" -osvg -O\"$file\".svg --title -xw -c &>/dev/null", $returnvalue);
+    if (!file_exists($file . "png")) {
+      system("obabel \"$file\" -opng -O\"$file\".png --title -xw -c &>/dev/null", $returnvalue);
     }
     else {
       $returnValue = '0';
@@ -317,8 +317,8 @@ JS;
     $returnValue = '0';
 //  Once the svg is created we need to convert it to jpg using imagemagick
     if (!file_exists($filename)) {
-      system("convert \"$file\".svg -resize \"$width\"x\"$width\" -gravity center -extent \"$width\"x\"$width\" \"$filename\" 2>&1 &", $returnValue);
-      unlink($file . '.svg');
+      system("convert \"$file\".png -resize \"$width\"x\"$width\" -gravity center -extent \"$width\"x\"$width\" \"$filename\" 2>&1 &", $returnValue);
+      unlink($file . '.png');
     }
     else {
       $returnValue = '0';
