@@ -159,7 +159,9 @@ class IslandoraChem {
     drupal_add_js($pathTojs . 'ChemDoodleWeb/install/ChemDoodleWeb-libs.js');
     drupal_add_js($pathTojs . 'ChemDoodleWeb/install/ChemDoodleWeb.js');
 //    Grab the structure file and clean it up so that it displays in the JS viewer
-    $file = trim(file_get_contents($fedora_url . '/objects/' . $this->pid . '/datastreams/MOL/content'));
+//    $file = trim(file_get_contents($fedora_url . '/objects/' . $this->pid . '/datastreams/MOL/content'));
+    $collectionHelper_mol = new CollectionClass();
+    $file = trim($collectionHelper_mol->getStream($this->pid, "MOL"));
     $file = molClean($file);
 //    Put in the JS for the viewer and load the MOL file
     $content2 = '<script>
@@ -185,8 +187,8 @@ class IslandoraChem {
       '#weight' => 2,
     );
 //    Display the raw output file as text if it exists
-    $collectionHelper_output = new CollectionClass();
-    $xmlstr_output = $collectionHelper_output->getStream($this->pid, "OBJ");
+    $collectionHelper_output3 = new CollectionClass();
+    $xmlstr_output3 = $collectionHelper_output3->getStream($this->pid, "OBJ");
 
     $output = '';
 
@@ -201,8 +203,9 @@ JS;
 
     $output .= '<form><input type="button" value="Download" onclick="download()" /></form></BR>';
 
-    if (!$xmlstr_output == NULL) {
-      $output .= str_replace("\n", '</BR>', file_get_contents($fedora_url . '/objects/' . $this->pid . '/datastreams/OBJ/content'));
+    if (!$xmlstr_output3 == NULL) {
+//      $output .= str_replace("\n", '</BR>', file_get_contents($fedora_url . '/objects/' . $this->pid . '/datastreams/OBJ/content'));
+      $output .= str_replace("\n", '</BR>', $xmlstr_output3);
       if (strlen($output) > 1000) {
         $content3 = substr($output, 0, 500);
         $content3 .= ' ...' . "</BR></BR>" . '... ' . substr($output, -500, 500) . "</BR>";
