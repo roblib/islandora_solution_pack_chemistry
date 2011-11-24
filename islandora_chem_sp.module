@@ -138,7 +138,7 @@ function islandora_chem_sp_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('islandora_chem_sp_structure_search_form'),
     'type' => MENU_NORMAL_ITEM, //MENU_CALLBACK,
-    'access arguments' => array('access administration pages'),
+    'access arguments' => array('structure search'),
   );
 
   $items['inchi_search'] = array(
@@ -147,7 +147,7 @@ function islandora_chem_sp_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('islandora_chem_sp_inchi_search_form'),
     'type' => MENU_CALLBACK,
-    'access arguments' => array('access administration pages'),
+    'access arguments' => array('structure search'),
   );
 
   $items['fragment_search'] = array(
@@ -156,7 +156,7 @@ function islandora_chem_sp_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('islandora_chem_sp_fragment_search_form'),
     'type' => MENU_CALLBACK,
-    'access arguments' => array('access administration pages'),
+    'access arguments' => array('structure search'),
   );
 
   $items['substructure'] = array(
@@ -165,7 +165,7 @@ function islandora_chem_sp_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('islandora_chem_sp_substructure_search_intermediate_form'),
     'type' => MENU_CALLBACK,
-    'access arguments' => array('access administration pages'),
+    'access arguments' => array('structure search'),
   );
 
   $items['substructure_search'] = array(
@@ -174,7 +174,7 @@ function islandora_chem_sp_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('islandora_chem_sp_substructure_search_form'),
     'type' => MENU_CALLBACK,
-    'access arguments' => array('access administration pages'),
+    'access arguments' => array('structure search'),
   );
 
   $items['mw_search'] = array(
@@ -183,14 +183,14 @@ function islandora_chem_sp_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('islandora_chem_sp_mw_search_form'),
     'type' => MENU_CALLBACK,
-    'access arguments' => array('access administration pages'),
+    'access arguments' => array('view fedora collection'),
   );
 
   $items['download'] = array(
     'page callback' => 'drupal_get_form',
     'page arguments' => array('islandora_chem_sp_download_form'),
     'type' => MENU_CALLBACK,
-    'access arguments' => array('access administration pages'),
+    'access arguments' => array('view fedora collection'),
   );
   
   $items['researchers'] = array(
@@ -202,6 +202,12 @@ function islandora_chem_sp_menu() {
   );
 
   return $items;
+}
+
+function islandora_chem_sp_perm() {
+  return array(
+    'structure search',
+  );
 }
 
 function islandora_chem_sp_cron() {
