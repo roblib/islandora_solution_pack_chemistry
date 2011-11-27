@@ -1,6 +1,10 @@
 <?php
 
 /**
+ * @file
+ */
+
+/**
  * Build a structure search page with the ChemDoodle drawing applet
  * @param type $form_state
  * @return string 
@@ -8,17 +12,17 @@
 function islandora_chem_sp_structure_search_form($form_state) {
 
   global $base_url;
-  $pathTojs = drupal_get_path('module', 'islandora_chem_sp') . '/js/';
+  $path_to_js = drupal_get_path('module', 'islandora_chem_sp') . '/js/';
 
   $form = array();
 //  Chemdoodleweb needs a newer version of jquery than drupal and so anything that requires jquery 
 //  (like tabs) won't work alongside this editor
-  drupal_add_css($pathTojs . 'ChemDoodleWeb/install/ChemDoodleWeb.css');
-  drupal_add_css($pathTojs . 'ChemDoodleWeb/install/sketcher/jquery-ui-1.8.7.custom.css');
-  drupal_add_js($pathTojs . 'ChemDoodleWeb/install/ChemDoodleWeb-libs.js');
-  drupal_add_js($pathTojs . 'ChemDoodleWeb/install/ChemDoodleWeb.js');
-  drupal_add_js($pathTojs . 'ChemDoodleWeb/install/sketcher/jquery-ui-1.8.7.custom.min.js');
-  drupal_add_js($pathTojs . 'ChemDoodleWeb/install/sketcher/ChemDoodleWeb-sketcher.js');
+  drupal_add_css($path_to_js . 'ChemDoodleWeb/install/ChemDoodleWeb.css');
+  drupal_add_css($path_to_js . 'ChemDoodleWeb/install/sketcher/jquery-ui-1.8.7.custom.css');
+  drupal_add_js($path_to_js . 'ChemDoodleWeb/install/ChemDoodleWeb-libs.js');
+  drupal_add_js($path_to_js . 'ChemDoodleWeb/install/ChemDoodleWeb.js');
+  drupal_add_js($path_to_js . 'ChemDoodleWeb/install/sketcher/jquery-ui-1.8.7.custom.min.js');
+  drupal_add_js($path_to_js . 'ChemDoodleWeb/install/sketcher/ChemDoodleWeb-sketcher.js');
 // Setup the applet and create JS buttons underneath to search
   $content1 = <<<JS
     <script>
@@ -26,7 +30,7 @@ function islandora_chem_sp_structure_search_form($form_state) {
  
   ChemDoodle.ELEMENT['S'].jmolColor = '#B9A130';
   // initializes the SketcherCanvas
-  var sketcher = new ChemDoodle.SketcherCanvas('sketcher', 500, 300, '$pathTojs/ChemDoodleWeb/install/sketcher/icons/', ChemDoodle.featureDetection.supports_touch(), false);
+  var sketcher = new ChemDoodle.SketcherCanvas('sketcher', 500, 300, '$path_to_js/ChemDoodleWeb/install/sketcher/icons/', ChemDoodle.featureDetection.supports_touch(), false);
   // sets terminal carbon labels to display
   sketcher.specs.atoms_displayTerminalCarbonLabels_2D = true;
   // sets atom labels to be colored by JMol colors, which are easy to recognize
@@ -94,6 +98,7 @@ JS;
  * @param type $mol 
  */
 function islandora_chem_sp_inchi_search_form($form_state, $mol = NULL) {
+  $_SESSION['mol'] = '';
 // rebuild the MOL file that was passed in the URL
   $mol = str_replace('colon', '://', $mol);
   $mol = str_replace('.nl.', "\n", $mol);
@@ -105,7 +110,7 @@ function islandora_chem_sp_inchi_search_form($form_state, $mol = NULL) {
   fclose($fh);
 // Generate the inchikey from the MOL file and pass it to solr for searching
   exec("obabel \"$file\" -oinchi -xK", $inchi_key);
-
+  $_SESSION['mol'] = trim($mol);
   drupal_goto('islandora/solr/search/cml.inchikey:' . $inchi_key[0]);
 }
 
@@ -131,7 +136,7 @@ function islandora_chem_sp_fragment_search_form($form_state, $mol = NULL) {
   exec("checkmol -c \"$file\"", $fragment);
 // Pass the fragments to solr to search for matches
   $fragments = str_replace(';', ' ', $fragment[0]);
-
+$_SESSION['mol'] = trim($mol);
   drupal_goto('islandora/solr/search/cml.fragments:' . $fragments);
 }
 
@@ -164,6 +169,7 @@ function islandora_chem_sp_substructure_search_intermediate_form($form_state, $m
   }
   
   $_SESSION['query'] = $inchikeys;
+  $_SESSION['mol'] = trim($mol);
   drupal_goto('substructure_search');
 }
 
@@ -175,16 +181,58 @@ function islandora_chem_sp_substructure_search_intermediate_form($form_state, $m
 function islandora_chem_sp_substructure_search_form($form_state) {
 
   module_load_include('inc', 'islandora_solr_search', 'IslandoraSolrQueryProcessor');
+  module_load_include('inc', 'islandora_chem_sp', 'FileConversion');
+  global $base_url;
+  $path = drupal_get_path('module', 'islandora_chem_sp');
+  $path_to_js = $path . '/js/';
+  drupal_add_css($path . '/islandora_chem_sp_search.css');
+  drupal_add_css($path_to_js . 'ChemDoodleWeb/install/sketcher/jquery-ui-1.8.7.custom.css');
+  drupal_add_js($path_to_js . 'ChemDoodleWeb/install/ChemDoodleWeb-libs.js');
+  drupal_add_js($path_to_js . 'ChemDoodleWeb/install/ChemDoodleWeb.js');
+  drupal_add_js($path_to_js . 'ChemDoodleWeb/install/sketcher/jquery-ui-1.8.7.custom.min.js');
+  drupal_add_js($path_to_js . 'ChemDoodleWeb/install/sketcher/ChemDoodleWeb-sketcher.js');
 
 //  drupal_set_breadcrumb($inchikeys);
 //  drupal_goto('islandora/solr/search/' . $inchikeys);
-  
+  $mol = $_SESSION['mol'];
   $inchikeys = $_SESSION['query'];
-  $_SESSION['query'] = '';
+  $_SESSION['mol'] = NULL;
+  
+  $find = array("\n", "\r", "http://");
+  $replace = array('\n', '', '');
+  $mol = str_replace($find, $replace, $mol);
+  
+  $search_structure .= <<<JS
+  <script>
+  var viewmol = new ChemDoodle.ViewerCanvas('viewmol', 100, 100);
+  viewmol.specs.backgroundColor = null;
+  viewmol.specs.bonds_width_2D = .6;
+  viewmol.specs.bonds_saturationWidth_2D = .18;
+  viewmol.specs.bonds_hashSpacing_2D = 2.5;
+  viewmol.specs.atoms_font_size_2D = 10;
+  viewmol.specs.atoms_font_families_2D = ['Helvetica', 'Arial', 'sans-serif'];
+  viewmol.specs.atoms_displayTerminalCarbonLabels_2D = true;
+  viewmol.specs.atoms_useJMOLColors = true;
+  var caffeineMolFile = "$mol";
+  var caffeine = ChemDoodle.readMOL(caffeineMolFile);
+  viewmol.loadMolecule(caffeine);
+</script>
+JS;
+  
+//  $headers = array();
+//  $rows = array(
+//    array(t('This is the structure you searched for:'), $search_structure,),
+//  );
+//  
+//  $table = theme('table', $headers, $rows);
+  $table = '<div class="search-text">' . t('This is the structure you searched for:') . '</div>';
+  $table .= '<div class="search-mol">' . $search_structure . '</div>';
   
   $output = islandora_solr_search($inchikeys);
   
-//  var_dump($output);
+  $form['table'] = array(
+    '#value' => $table,
+  );
   
   $form['search'] = array(
     '#value' => $output,

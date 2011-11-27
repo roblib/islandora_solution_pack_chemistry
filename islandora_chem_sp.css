@@ -51,3 +51,7 @@ pre span.K{ color:blue;
 } /* Keywords */
 pre span.V{ color:#70d6ff; } /* Vars */
 pre span.D{ color:#ff9a5d; } /* Defines */
+
+.search-text {
+    font-weight: bold;
+}

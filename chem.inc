@@ -79,7 +79,7 @@ class IslandoraChem {
       $mw2 = $mw[0][0];
 //      The formula is stored with spaces in to conform to the CML standard so we need to get rid of them
 //      Also make the numbers subscript 
-      $formula2 = formulaCleanup($formula);
+      $formula2 = formula_cleanup($formula);
 //      Clean up IUPAC name as it's usually ugly. If there isn't one then deal with it gracefully
       $iupac = $ns_xml->molecule->name;
       $iupac = ucfirst(strtolower(ltrim($iupac)));
@@ -124,7 +124,7 @@ class IslandoraChem {
       $header = array();
       $rows = array(
         array('Title', $title),
-        array('Contributor(s)', l($contributor, $base_url . '/islandora/solr/search/' . preg_replace("/\([^\)]+\)/","",$contributor) . '/-/dismax')),
+        array('Contributor(s)', l($contributor, $base_url . '/islandora/solr/search/' . preg_replace("/\([^\)]+\)/", "", $contributor) . '/-/dismax')),
         array('IUPAC name', $iupac),
         array('Synonyms', html_entity_decode($synonym[0])),
         array('File description', $desc),
@@ -162,7 +162,7 @@ class IslandoraChem {
 //    $file = trim(file_get_contents($fedora_url . '/objects/' . $this->pid . '/datastreams/MOL/content'));
     $collectionHelper_mol = new CollectionClass();
     $file = trim($collectionHelper_mol->getStream($this->pid, "MOL"));
-    $file = molClean($file);
+    $file = mol_clean($file);
 //    Put in the JS for the viewer and load the MOL file
     $content2 = '<script>
                     var transformBallAndStick = new ChemDoodle.TransformCanvas3D("transformBallAndStick", 250, 250);
@@ -602,7 +602,7 @@ JS;
     
     $calculations_list = array();
         $solr_url = variable_get('fedora_solr_search_url', 'http://localhost:8080/solr');
-        $solr_query = $solr_url . '/select?q=dc.contributor:' . urlencode($fullName) . '&fl=PID,dc.title,cml.name';
+        $solr_query = $solr_url . '/select?q=dc.contributor:"' . urlencode($fullName) . '"&fl=PID,dc.title,cml.name';
         $solr_result = file_get_contents($solr_query);
         $calc_search = new SimpleXMLElement($solr_result);
         $pid_results = $calc_search->result;
@@ -646,7 +646,6 @@ JS;
     $filename = '/var/www/drupal/sites/all/modules/islandora_solution_pack_chemistry/images/gnome_stock_person.png';
 
     if (file_exists($filename)) {
-    drupal_set_message('Destination:' . $filename);
     $_SESSION['fedora_ingest_files']["$dsid"] = $filename;
     return TRUE;
     print "Ingest succeeded!";

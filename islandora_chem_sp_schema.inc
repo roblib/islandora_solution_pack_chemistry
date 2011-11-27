@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * @file
+ */
+
 function islandora_chem_sp_schema() {
     $result = db_result(db_query('Select * from {islandora_chem_fingerprint}'));
     if (!$result) {

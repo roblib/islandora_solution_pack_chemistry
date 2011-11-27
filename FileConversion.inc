@@ -1,51 +1,51 @@
 <?php
 
-function cleanXYZ($file) {
+/**
+ * @file
+ */
+
+function clean_XYZ($file) {
   $ext = strrchr($file, '.');
   $base = preg_replace("/$ext$/", '', $file);
   $ext = substr($ext, 1);
   if ($ext == 'xyz') {
     $xyz = file($file);
-    drupal_set_message('First line: ' . $xyz[0]);
     if (!checkNumeric($xyz[0])) {
-      drupal_set_message('Not numeric! It is ' . gettype($xyz[0]));
     }
     if (!checkNumeric($xyz[0])) {
       $fp2 = fopen($file, 'w');
-      drupal_set_message('Cleaning file: ' . $file);
       $atoms = count($xyz);
       $str2 = implode("", $xyz);
       $str2 = $atoms . "\n" . $dir . "\n" . $str2;
-      drupal_set_message('New xyz file:' . $str2);
       fwrite($fp2, $str2);
       fclose($fp2);
     }
   }
 }
 
-function unzipFiles($directory, $doNotAdd) {
+function unzip_files($directory, $do_not_add) {
 
   global $user;
 
-  $dirName = "temp" . $user->uid;
+  $dir_name = "temp" . $user->uid;
   $zips = glob($directory . '/*.zip');
   $zipfile = $zips[0];
   if ($zipfile != NULL) {
 //  $tmpDir = file_directory_path() . '/' . $dirName . '/';
-    $tmpDir = $directory . '/temp/';
-    if (!is_dir($tmpDir)) {
-      mkdir($tmpDir);
+    $tmp_dir = $directory . '/temp/';
+    if (!is_dir($tmp_dir)) {
+      mkdir($tmp_dir);
     }
-    $fileName = $zipfile->filepath;
+    $file_name = $zipfile->filepath;
     $file_list = array();
-    $cmdString = "unzip -q -o -d " . $tmpDir . ' ' . $zipfile;
-    system($cmdString, $retVal);
+    $cmd_string = "unzip -q -o -d " . $tmp_dir . ' ' . $zipfile;
+    system($cmd_string, $ret_val);
   }
 
   return $zipfile;
 }
 
-function createMODS($file) {
+function create_mods($file) {
   $mods = <<<MODS
   <mods xmlns="http://www.loc.gov/mods/v3" xmlns:mods="http://www.loc.gov/mods/v3" xmlns:xlink="http://www.w3.org/1999/xlink">
           <titleInfo><title>TITLE</title></titleInfo>
@@ -58,39 +58,33 @@ MODS;
 
   $dir = dirname($file);
 
-  $newName = $dir . '/' . $title . '.xml';
+  $new_name = $dir . '/' . $title . '.xml';
 
-  if (!file_exists($newName)) {
+  if (!file_exists($new_name)) {
     $path = explode('/', $file);
-    drupal_set_message('Name path: ' . $path[5]);
     $name = $path[5];
-
     $mods = str_replace(array('TITLE', 'NAME'), array($title, $name), $mods);
-
-    drupal_set_message($mods);
-
-    drupal_set_message('MODS name: ' . $newName);
-    $fh = fopen($newName, 'w');
+    $fh = fopen($new_name, 'w');
     fwrite($fh, $mods);
     fclose($fh);
   }
 }
 
-function isEmptyDir($dir) {
+function is_empty_dir($dir) {
   return (($files = @scandir($dir)) && count($files) <= 2);
 }
 
-function checkNumeric($str) {
-  $retVal = preg_match('/\d/', $str);
-  return $retVal;
+function check_numeric($str) {
+  $ret_val = preg_match('/\d/', $str);
+  return $ret_val;
 }
 
-function formulaCleanup($formula) {
+function formula_cleanup($formula) {
   $formula2 = str_replace(' ', '', $formula);
   $formula2 = preg_replace('/([0-9])/', '<sub>$1</sub>', $formula2);
 
   $find = array('----', '---', '--', '++++', '+++', '++');
-  $replace = array('<sup>4-</sup>', '<sup>3-</sup>', '<sup>2-</sup>', '<sup>4+</sup>', '<sup>3+</sup>', '<sup>2+</sup>',);
+  $replace = array('<sup>4-</sup>', '<sup>3-</sup>', '<sup>2-</sup>', '<sup>4+</sup>', '<sup>3+</sup>', '<sup>2+</sup>', );
 
   $formula2 = str_replace($find, $replace, $formula2);
 
@@ -104,17 +98,17 @@ function formulaCleanup($formula) {
   return $formula2;
 }
 
-function molClean($molFile) {
+function mol_clean($mol_file) {
 
   $find = array("\n", "\r");
   $replace = array('\n', '');
-  $file = str_replace($find, $replace, $molFile);
+  $file = str_replace($find, $replace, $mol_file);
   $file = 'Molecule Name\n' . $file;
 
   return $file;
 }
 
-function downloadFile($pid) {
+function download_file($pid) {
   
   global $fedora_url;
   
@@ -150,7 +144,7 @@ function prettify($code) {
   return $out;
 }
 
-function stripos_multi ($haystack, $needle, $offset = '0') {
+function stripos_multi($haystack, $needle, $offset = '0') {
  if (!is_array($needle)) {
   $needle = array($needle);
  }//if
@@ -158,12 +152,12 @@ function stripos_multi ($haystack, $needle, $offset = '0') {
  foreach ($needle as $searchstring) {
   $position = stripos($haystack, $searchstring, $offset);
 
-  if ($position !== false) {
+  if ($position !== FALSE) {
    return $position;
   }//if
  }//foreach
 
- return false;
+ return FALSE;
 }//function  
 
 class SyntaxHighlight {
@@ -171,7 +165,7 @@ class SyntaxHighlight {
         $s = htmlspecialchars( $s );
         
         // Workaround for escaped backslashes
-        $s = str_replace( '\\\\','\\\\<e>', $s ); 
+        $s = str_replace( '\\\\', '\\\\<e>', $s ); 
         
         $regexp = array(
             // Comments/Strings
@@ -226,7 +220,7 @@ class SyntaxHighlight {
         // tabs with four spaces.
         $s = str_replace( array( '<e>', "\t" ), array( '', '    ' ), $s );
         
-        return '<pre>'.$s.'</pre>';
+        return '<pre>' . $s . '</pre>';
     }
     
     // Regexp-Callback to replace every comment or string with a uniqid and save 
@@ -234,31 +228,32 @@ class SyntaxHighlight {
     // This way, strings and comments will be stripped out and wont be processed 
     // by the other expressions searching for keywords etc.
     private static function replaceId( &$a, $match ) {
-        $id = "##r".uniqid()."##";
+        $id = "##r" . uniqid() . "##";
         
         // String or Comment?
-        if( $match{0} == '/' || $match{0} == '#' ) {
-            $a[$id] = '<span class="C">'.$match.'</span>';
-        } else {
-            $a[$id] = '<span class="S">'.$match.'</span>';
+        if ($match{0} == '/' || $match{0} == '#') {
+            $a[$id] = '<span class="C">' . $match . '</span>';
+        } 
+        else {
+            $a[$id] = '<span class="S">' . $match . '</span>';
         }
         return $id;
     }
 }
 
 function system_extension_mime_types() {
-    # Returns the system MIME type mapping of extensions to MIME types, as defined in /etc/mime.types.
+    // Returns the system MIME type mapping of extensions to MIME types, as defined in /etc/mime.types.
     $out = array();
     $file = fopen('/etc/mime.types', 'r');
-    while(($line = fgets($file)) !== false) {
+    while (($line = fgets($file)) !== FALSE) {
         $line = trim(preg_replace('/#.*/', '', $line));
-        if(!$line)
+        if (!$line)
             continue;
         $parts = preg_split('/\s+/', $line);
-        if(count($parts) == 1)
+        if (count($parts) == 1)
             continue;
         $type = array_shift($parts);
-        foreach($parts as $part)
+        foreach ($parts as $part)
             $out[$part] = $type;
     }
     fclose($file);
@@ -266,33 +261,33 @@ function system_extension_mime_types() {
 }
 
 function system_extension_mime_type($file) {
-    # Returns the system MIME type (as defined in /etc/mime.types) for the filename specified.
-    #
-    # $file - the filename to examine
+    // Returns the system MIME type (as defined in /etc/mime.types) for the filename specified.
+    //
+    // $file - the filename to examine
     static $types;
-    if(!isset($types))
+    if (!isset($types))
         $types = system_extension_mime_types();
     $ext = pathinfo($file, PATHINFO_EXTENSION);
-    if(!$ext)
+    if (!$ext)
         $ext = $file;
     $ext = strtolower($ext);
-    return isset($types[$ext]) ? $types[$ext] : null;
+    return isset($types[$ext]) ? $types[$ext] : NULL;
 }
 
 function system_mime_type_extensions() {
-    # Returns the system MIME type mapping of MIME types to extensions, as defined in /etc/mime.types (considering the first
-    # extension listed to be canonical).
+    // Returns the system MIME type mapping of MIME types to extensions, as defined in /etc/mime.types (considering the first
+    // extension listed to be canonical).
     $out = array();
     $file = fopen('/etc/mime.types', 'r');
-    while(($line = fgets($file)) !== false) {
+    while (($line = fgets($file)) !== FALSE) {
         $line = trim(preg_replace('/#.*/', '', $line));
-        if(!$line)
+        if (!$line)
             continue;
         $parts = preg_split('/\s+/', $line);
-        if(count($parts) == 1)
+        if (count($parts) == 1)
             continue;
         $type = array_shift($parts);
-        if(!isset($out[$type]))
+        if (!isset($out[$type]))
             $out[$type] = array_shift($parts);
     }
     fclose($file);
@@ -300,12 +295,12 @@ function system_mime_type_extensions() {
 }
 
 function system_mime_type_extension($type) {
-    # Returns the canonical file extension for the MIME type specified, as defined in /etc/mime.types (considering the first
-    # extension listed to be canonical).
-    #
-    # $type - the MIME type
+    // Returns the canonical file extension for the MIME type specified, as defined in /etc/mime.types (considering the first
+    // extension listed to be canonical).
+    //
+    // $type - the MIME type
     static $exts;
-    if(!isset($exts))
+    if (!isset($exts))
         $exts = system_mime_type_extensions();
-    return isset($exts[$type]) ? $exts[$type] : null;
+    return isset($exts[$type]) ? $exts[$type] : NULL;
 }

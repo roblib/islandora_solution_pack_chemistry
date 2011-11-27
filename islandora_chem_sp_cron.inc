@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * @file
+ */
+
+/**
+ * Hook cron implementation to unzip and ingest files when cron runs
+ */
 function islandora_chem_cron() {
 
   module_load_include('inc', 'fedora_repository', 'api/fedora_item');
@@ -8,35 +15,34 @@ function islandora_chem_cron() {
   module_load_include('inc', 'islandora_chem_sp', 'FileConversion');
 
   $directory = '/var/www/drupal/sites/default/files/watch';
-  $doNotAdd = array('.', '..', '__MACOSX');
+  $do_not_add = array('.', '..', '__MACOSX');
 
-  $zipfile = unzipFiles($directory, $doNotAdd);
+  $zipfile = unzip_files($directory, $do_not_add);
   $dirs = array();
-  $tmpDir = $directory . '/temp/';
-  array_push($dirs, $tmpDir);
-  $files = scandir($tmpDir);
+  $tmp_dir = $directory . '/temp/';
+  array_push($dirs, $tmp_dir);
+  $files = scandir($tmp_dir);
   foreach ($files as $file) {
-    if (!in_array($file, $doNotAdd)) {
-      cleanXYZ($tmpDir . $file);
-      $tmpFile = $tmpDir . $file;
+    if (!in_array($file, $do_not_add)) {
+      clean_XYZ($tmp_dir . $file);
+      $tmp_file = $tmp_dir . $file;
 //      drupal_set_message('Temp file: ' . $tmpFile);
-      createMODS($tmpFile);
+      create_mods($tmp_file);
     }
-    if (is_dir("$tmpDir/$file") & !in_array($file, $doNotAdd)) {
+    if (is_dir("$tmp_dir/$file") & !in_array($file, $do_not_add)) {
 
-      array_push($dirs, $tmpDir . $file);
+      array_push($dirs, $tmp_dir . $file);
     }
   }
 
-  if ($inputs = opendir($tmpDir)) {
+  if ($inputs = opendir($tmp_dir)) {
     while (FALSE !== ($file_name = readdir($inputs))) {
-      if (!in_array($file_name, $doNotAdd) && is_dir($file_name) == FALSE) {
+      if (!in_array($file_name, $do_not_add) && is_dir($file_name) == FALSE) {
         $ext = strrchr($file_name, '.');
         $base = preg_replace("/$ext$/", '', $file_name);
         $ext = substr($ext, 1);
         if ($ext) {
-          $file_list[$base][$ext] = $tmpDir . $file_name;
-          drupal_set_message('File name: ' . $file_name);
+          $file_list[$base][$ext] = $tmp_dir . $file_name;
         }
       }
     }
@@ -45,7 +51,6 @@ function islandora_chem_cron() {
   if (!$file_list == NULL) {
     $file_list = array_chunk($file_list, 5, TRUE);
     foreach ($file_list[0] as $label => $object_files) {
-      drupal_set_message('Object files: ' . implode(', ', $object_files));
       create_batch_objects($label, 'quantumchem:sp_chem_CM', $object_files, 'quantumchem:sp_chem_calculations', 'quantumchem', '');
       $delete_ext = strrchr(array_shift(array_values($object_files)), '.');
       $delete_base = preg_replace("/$delete_ext$/", '', array_shift(array_values($object_files)));
@@ -54,8 +59,8 @@ function islandora_chem_cron() {
       $delete_base = str_replace(' ', '-', $delete_base);
       $mask = $delete_base . '.*';
       array_map("unlink", glob($mask));
-      if (is_dir($tmpDir) && isEmptyDir($tmpDir)) {
-        rmdir($tmpDir);
+      if (is_dir($tmp_dir) && is_empty_dir($tmp_dir)) {
+        rmdir($tmp-dir);
       }
       if (file_exists($zipfile)) {
         unlink($zipfile);
