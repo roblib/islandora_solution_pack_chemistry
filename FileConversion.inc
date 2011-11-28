@@ -304,3 +304,71 @@ function system_mime_type_extension($type) {
         $exts = system_mime_type_extensions();
     return isset($exts[$type]) ? $exts[$type] : NULL;
 }
+
+/**
+ * Php you suck so badly, the array_filter function should just take extra parameters like array_walk...
+ */
+class AutoCompleteFilterChem {
+
+  protected $string;
+
+  function __construct($string) {
+    $this->string = strtolower($string);
+  }
+
+  function __invoke($content_model) {
+    return (preg_match("/^{$this->string}/i", $content_model) !== 0) ? TRUE : FALSE;
+  }
+
+}
+
+/**
+ * Autocomplete the content model name..
+ * 
+ * @param string $string
+ * @return string
+ */
+function islandora_content_model_forms_autocomplete_researchers($string = '') {
+  $content_models = islandora_chem_sp_get_values('rels.hasModel:researcher_CM', 'dc.title');
+  // @todo find an alternative solution to array filter because of earlier versions 5.2
+  $output = array_filter($content_models, new AutoCompleteFilterChem($string));
+  $output[$string] = $string;
+//  var_dump($output);
+  return drupal_json($output);
+}
+
+/**
+ * Autocomplete the content model name..
+ * 
+ * @param string $string
+ * @return string
+ */
+function islandora_content_model_forms_autocomplete_institutions($string = '') {
+  $content_models = islandora_chem_sp_get_values('rels.hasModel:researcher_CM', 'mads.organization');
+  // @todo find an alternative solution to array filter because of earlier versions 5.2
+  $output = array_filter($content_models, new AutoCompleteFilterChem($string));
+  $output[$string] = $string;
+  return drupal_json($output);
+}
+
+/**
+ *
+ * @param string $content_model
+ * @return array 
+ */
+function islandora_chem_sp_get_values($query, $results) {
+  
+  $query = file_get_contents('http://192.168.200.128:8080/solr/select?q=' . $query . '&fl=' . $results);
+  
+  $result = new SimpleXMLElement($query);
+  $researchers = $result->result;
+//  var_dump($researchers);
+  $list = array();
+  
+  foreach ($researchers->children() as $researcher) {
+    $value = (string)$researcher->arr[0]->str;
+    $list[$value] = $value;
+  }
+//  var_dump($list);
+  return $list;
+}
