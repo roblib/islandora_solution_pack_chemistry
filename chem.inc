@@ -584,10 +584,10 @@ JS;
     
     $rows = array(
             array('Name', $fullName), 
-            array('Organization', $organization),
+            array('Organization', l($organization, 'islandora/solr/search/' . $organization . '/-/dismax')),
             array('Position', $position),
             array('Email', $email),
-            array('Interests', $interests),
+            array('Interests', l($interests, 'islandora/solr/search/' . $interests . '/-/dismax')),
       );
     
     $imgPath = $base_path . drupal_get_path('module', 'islandora_chem_sp') . '/images/gnome_stock_person.png';
