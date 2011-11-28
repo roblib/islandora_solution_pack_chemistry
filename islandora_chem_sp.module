@@ -196,7 +196,7 @@ function islandora_chem_sp_menu() {
   $items['r_autocomplete'] = array(
     'title' => 'Auto Complete List of Researchers.',
     'description' => 'Lists Researchers.',
-    'file' => 'FileConversion.inc',
+    'file' => 'autocomplete.inc',
     'page callback' => 'islandora_content_model_forms_autocomplete_researchers',
     'access arguments' => array('view fedora collection'), // Use something fedora specific.
     'type' => MENU_CALLBACK,
@@ -205,7 +205,7 @@ function islandora_chem_sp_menu() {
   $items['i_autocomplete'] = array(
     'title' => 'Auto Complete List of Institutions.',
     'description' => 'Lists Institutions.',
-    'file' => 'FileConversion.inc',
+    'file' => 'autocomplete.inc',
     'page callback' => 'islandora_content_model_forms_autocomplete_institutions',
     'access arguments' => array('view fedora collection'), // Use something fedora specific.
     'type' => MENU_CALLBACK,
