@@ -358,7 +358,9 @@ function islandora_content_model_forms_autocomplete_institutions($string = '') {
  */
 function islandora_chem_sp_get_values($query, $results) {
   
-  $query = file_get_contents('http://192.168.200.128:8080/solr/select?q=' . $query . '&fl=' . $results);
+  $solr_url = variable_get('fedora_solr_search_url', 'http://localhost:8080/solr');
+  
+  $query = file_get_contents($solr_url . '/select?q=' . $query . '&fl=' . $results);
   
   $result = new SimpleXMLElement($query);
   $researchers = $result->result;
