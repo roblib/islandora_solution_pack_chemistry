@@ -173,6 +173,8 @@ JS;
 
   function printResultsChem($results) {
 
+    module_load_include('inc', 'fedora_repository', 'CollectionClass');
+    
     $items = array();
     $type = "ol";
     $title = NULL;
@@ -204,10 +206,14 @@ JS;
 //          'header' => TRUE,
 //        );
 
-      $tn_url = $base_url . '/fedora/repository/' . htmlspecialchars($doc->PID, ENT_QUOTES, 'utf-8') . '/TN';
+      $collectionHelper = new CollectionClass();
+      $tn_ds = $collectionHelper->getStream($doc->PID, "TN");
+ 
+      $tn_url = $base_url . '/fedora/repository/' . htmlspecialchars($doc->PID, ENT_QUOTES, 'utf-8') . '/TN/content';
+      
       $tn2_url = drupal_get_path('module', 'islandora_chem_sp') . '/images/gnome_stock_person.png';
 //      Check if the TN datastream exists, if it does then display the thumbnail in the search results.
-      if (@file_get_contents($tn_url)) {
+      if (isset($tn_ds)) {
         $tn = '<a href="' . $base_url . '/fedora/repository/' . htmlspecialchars($doc->PID, ENT_QUOTES, 'utf-8') . '"><img src="' . $tn_url . '" /></a>';
         $rows[][] = $tn;
         $row++;
