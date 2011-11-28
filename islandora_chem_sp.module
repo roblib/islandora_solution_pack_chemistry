@@ -262,3 +262,16 @@ function islandora_chem_sp_block($op = 'list', $delta = 0, $edit = array()) {
       return $block;
   }
 }
+
+function islandora_chem_sp_islandora_solr_primary_display() {
+   return array(
+    'islandora_chem_sp' => array(
+      'name' => t('Chemistry'),
+      'module' => 'islandora_chem_sp',
+      'file' => 'IslandoraSolrResultsChem.inc',
+      'class' => "IslandoraSolrResultsChem",
+      'function' => "displayResultsChem",
+      'description' => t("Results displayed in a format suited for chemistry."),
+    )
+  );
+}
