@@ -41,9 +41,15 @@ function islandora_content_model_forms_autocomplete_researchers($string = '') {
 function islandora_content_model_forms_autocomplete_institutions($string = '') {
   $content_models = islandora_chem_sp_get_values('rels.hasModel:researcher_CM', 'mads.organization');
   // @todo find an alternative solution to array filter because of earlier versions 5.2
+  if ($content_models == NULL){
+    drupal_set_message('Solr is not responding!', 'error');
+    break;
+  }
+  else {
   $output = array_filter($content_models, new AutoCompleteFilterChem($string));
   $output[$string] = $string;
   return drupal_json($output);
+  }
 }
 
 /**
