@@ -60,7 +60,6 @@ class IslandoraSolrResultsChem extends IslandoraSolrResults {
       drupal_add_js($path_to_js . 'ChemDoodleWeb/install/sketcher/ChemDoodleWeb-sketcher.js');
 
       $mol = $_SESSION['mol'];
-      drupal_set_message('Mol: ' . $mol);
 //      $_SESSION['mol'] = $mol;
       $find = array("\n", "\r", "http://");
       $replace = array('\n', '', '');
