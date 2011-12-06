@@ -162,7 +162,7 @@ function islandora_chem_sp_substructure_search_intermediate_form($form_state, $m
 // Generate the db query for the fingerprint using the python script. Python is much better at 
 // handling large numbers than PHP so as much of the work is done in the script and only the 
 // query string is passed back
-  exec('/usr/bin/python ' . drupal_get_path('module', 'islandora_chem_sp') . '/indigo-python-api-1.0.0-linux/fingerprint_search.py /tmp/tmp2.mol', $fingerprint);
+  exec('/opt/ActivePython-2.7/bin/python ' . drupal_get_path('module', 'islandora_chem_sp') . '/indigo-python-api-1.0.0-linux/fingerprint_search.py /tmp/tmp2.mol', $fingerprint);
 // Use the fingerprint to look up the inchikey and pass this to solr for searching. Ideally I'd use 
 // solr to search the fingerprint but it doesn't do bitwise comparisons so we need to use MySQL for
 //  that bit
