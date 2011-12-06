@@ -136,12 +136,18 @@ function islandora_chem_sp_fragment_search_form($form_state, $mol = NULL) {
   exec("checkmol -c \"$file\"", $fragment);
 // Pass the fragments to solr to search for matches
   $fragments = str_replace(';', ' ', $fragment[0]);
-$_SESSION['mol'] = trim($mol);
-  drupal_goto('islandora/solr/search/cml.fragments:' . $fragments);
+  if ($fragment[0] != '') {
+    $_SESSION['mol'] = trim($mol);
+    drupal_goto('islandora/solr/search/cml.fragments:' . $fragments);
+  }
+  else {
+    drupal_set_message(t('Sorry, but your search returned no results.'), 'warning');
+    drupal_goto('structure_search');
+  }
 }
 
 function islandora_chem_sp_substructure_search_intermediate_form($form_state, $mol = NULL) {
-  
+
   // rebuild the MOL file that was passed in the URL
   $mol = str_replace('colon', '://', $mol);
   $mol = str_replace('.nl.', "\n", $mol);
@@ -167,10 +173,16 @@ function islandora_chem_sp_substructure_search_intermediate_form($form_state, $m
 
     $inchikeys .= 'cml.inchikey:' . $inchikey . ' or ';
   }
-  
-  $_SESSION['query'] = $inchikeys;
-  $_SESSION['mol'] = trim($mol);
-  drupal_goto('substructure_search');
+
+  if (isset($inchikey)) {
+    $_SESSION['query'] = $inchikeys;
+    $_SESSION['mol'] = trim($mol);
+    drupal_goto('substructure_search');
+  }
+  else {
+    drupal_set_message(t('Sorry, but your search returned no results.'), 'warning');
+    drupal_goto('structure_search');
+  }
 }
 
 /**
@@ -197,11 +209,11 @@ function islandora_chem_sp_substructure_search_form($form_state) {
   $mol = $_SESSION['mol'];
   $inchikeys = $_SESSION['query'];
   $_SESSION['mol'] = NULL;
-  
+
   $find = array("\n", "\r", "http://");
   $replace = array('\n', '', '');
   $mol = str_replace($find, $replace, $mol);
-  
+
   $search_structure .= <<<JS
   <script>
   var viewmol = new ChemDoodle.ViewerCanvas('viewmol', 100, 100);
@@ -218,7 +230,7 @@ function islandora_chem_sp_substructure_search_form($form_state) {
   viewmol.loadMolecule(caffeine);
 </script>
 JS;
-  
+
 //  $headers = array();
 //  $rows = array(
 //    array(t('This is the structure you searched for:'), $search_structure,),
@@ -227,25 +239,24 @@ JS;
 //  $table = theme('table', $headers, $rows);
   $table = '<div class="search-text">' . t('This is the structure you searched for:') . '</div>';
   $table .= '<div class="search-mol">' . $search_structure . '</div>';
-  
+
   $output = islandora_solr_search($inchikeys);
-  
+
   $form['table'] = array(
     '#value' => $table,
   );
-  
+
   $form['search'] = array(
     '#value' => $output,
   );
-  
+
   $breadcrumb = array();
   $breadcrumb[] = l(t('Home'), '');
   $breadcrumb[] = l(t('Structure search'), 'structure_search');
   $breadcrumb[] = t('Substructure search');
   drupal_set_breadcrumb($breadcrumb);
-  
+
   return $form;
-  
 }
 
 function islandora_chem_sp_mw_search_form($form_state) {
@@ -275,7 +286,7 @@ function islandora_chem_sp_mw_search_form($form_state) {
     '#prefix' => '<div class="mw_range_submit">',
     '#suffix' => '</div>',
   );
-  
+
   $form['clear'] = array(
     '#value' => '<div class="clearfix">',
   );
