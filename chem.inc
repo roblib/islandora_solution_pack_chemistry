@@ -233,7 +233,7 @@ JS;
     $xmlstr_input = $collectionHelper_input->getStream($this->pid, "INPUT");
 
     if (!$xmlstr_input == NULL) {
-      $content4 = str_replace("\n", '</BR>', file_get_contents($fedora_url . '/objects/' . $this->pid . '/datastreams/INPUT/content'));
+      $content4 = str_replace("\n", '</BR>', $xmlstr_input);
 
       $tabset['first_tab']['tabs']['input'] = array(
         '#type' => 'tabpage',
@@ -247,7 +247,7 @@ JS;
     $xmlstr_code = $collectionHelper_code->getStream($this->pid, "CODE");
 
     if (!$xmlstr_code == NULL) {
-      $content5 = str_replace("\n", '</BR>', SyntaxHighlight::process(file_get_contents($fedora_url . '/objects/' . $this->pid . '/datastreams/CODE/content')));
+      $content5 = str_replace("\n", '</BR>', SyntaxHighlight::process($xmlstr_code));
 
       $tabset['first_tab']['tabs']['code'] = array(
         '#type' => 'tabpage',
