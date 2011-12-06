@@ -10,9 +10,9 @@ function clean_XYZ($file) {
   $ext = substr($ext, 1);
   if ($ext == 'xyz') {
     $xyz = file($file);
-    if (!checkNumeric($xyz[0])) {
+    if (!check_numeric($xyz[0])) {
     }
-    if (!checkNumeric($xyz[0])) {
+    if (!check_numeric($xyz[0])) {
       $fp2 = fopen($file, 'w');
       $atoms = count($xyz);
       $str2 = implode("", $xyz);

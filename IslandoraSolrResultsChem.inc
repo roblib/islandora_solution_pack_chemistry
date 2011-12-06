@@ -1,6 +1,7 @@
 <?php
 
 /*
+ * @file
  * contains methods to search solr and display results.  depends on Apache_Solr_Php client.
  */
 
@@ -47,8 +48,8 @@ class IslandoraSolrResultsChem extends IslandoraSolrResults {
       $output .= "<div>Sorry, but your search returned no results.</div>";
       return $output;
     }
-
-    if (!$_SESSION['mol'] == NULL) {
+ 
+    if (isset($_SESSION['mol'])) {
       $path = drupal_get_path('module', 'islandora_chem_sp');
       $path_to_js = $path . '/js/';
       drupal_add_css($path . '/islandora_chem_sp_search.css');
@@ -59,7 +60,8 @@ class IslandoraSolrResultsChem extends IslandoraSolrResults {
       drupal_add_js($path_to_js . 'ChemDoodleWeb/install/sketcher/ChemDoodleWeb-sketcher.js');
 
       $mol = $_SESSION['mol'];
-      $_SESSION['mol'] = '';
+      drupal_set_message('Mol: ' . $mol);
+//      $_SESSION['mol'] = $mol;
       $find = array("\n", "\r", "http://");
       $replace = array('\n', '', '');
       $mol = str_replace($find, $replace, $mol);
@@ -75,9 +77,9 @@ class IslandoraSolrResultsChem extends IslandoraSolrResults {
   viewmol.specs.atoms_font_families_2D = ['Helvetica', 'Arial', 'sans-serif'];
   viewmol.specs.atoms_displayTerminalCarbonLabels_2D = true;
   viewmol.specs.atoms_useJMOLColors = true;
-  var caffeineMolFile = "$mol";
-  var caffeine = ChemDoodle.readMOL(caffeineMolFile);
-  viewmol.loadMolecule(caffeine);
+  var MolFile = "$mol";
+  var mol = ChemDoodle.readMOL(MolFile);
+  viewmol.loadMolecule(mol);
 </script>
 JS;
 
@@ -145,7 +147,7 @@ JS;
 
       $output .= "</div>";
     }
-
+   
     $output .= '<h2>' . $title . '</h2>';
     $output .= '<div id="islandora_solr_result_count">(' . ($solrQueryProcessor->solrStart + 1) . ' - ' . $end . ' of ' . $total . ')</div>';
     $output .= '<div class="content">';
