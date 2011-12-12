@@ -247,7 +247,10 @@ JS;
     $xmlstr_code = $collectionHelper_code->getStream($this->pid, "CODE");
 
     if (!$xmlstr_code == NULL) {
-      $content5 = str_replace("\n", '</BR>', SyntaxHighlight::process($xmlstr_code));
+      module_load_include('php', 'geshifilter', '/geshi/geshi');
+      $geshi = new GeSHi($xmlstr_code, 'php');
+//      $content5 = str_replace("\n", '</BR>', SyntaxHighlight::process($xmlstr_code));
+$content5 = str_replace("\n", '</BR>', $geshi->parse_code());
 
       $tabset['first_tab']['tabs']['code'] = array(
         '#type' => 'tabpage',

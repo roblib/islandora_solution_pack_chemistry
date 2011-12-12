@@ -17,7 +17,7 @@
             >
                  <xsl:apply-templates exclude-result-prefixes="#all"/>
                 
-            <xsl:element name="dc:title"><xsl:value-of select="//namePart[@='given']"/></xsl:element>
+            <xsl:element name="dc:title"><xsl:value-of select="//namePart[@type='given']"/></xsl:element>
 
        </oai_dc:dc>
        
