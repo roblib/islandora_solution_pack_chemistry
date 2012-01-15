@@ -77,20 +77,27 @@ class IslandoraChem {
         $inchi_key[] = $key;
       }
       $mw2 = $mw[0][0];
+      
 //      The formula is stored with spaces in to conform to the CML standard so we need to get rid of them
 //      Also make the numbers subscript 
       $formula2 = formula_cleanup($formula);
+      
 //      Clean up IUPAC name as it's usually ugly. If there isn't one then deal with it gracefully
       $iupac = $ns_xml->molecule->name;
       $iupac = ucfirst(strtolower(ltrim($iupac)));
       if ($iupac == NULL) {
         $iupac = 'Not found';
       };
-
+      
       $synonym = $ns_xml->xpath("//alternative[@id='s1']");
+      if ($synonym[0] == '') {
+        $synonym[0] = 'None found';
+      };
+      
       $fragments = $ns_xml->xpath("//alternative[@id='f1']");
 
       $other_list = array();
+      
       // Again it is possible to have more than once inchi key if the object is a cluster so we have to query for each one
       foreach ($inchi_key as $key) {
         $solr_url = variable_get('fedora_solr_search_url', 'http://localhost:8080/solr');
@@ -104,8 +111,6 @@ class IslandoraChem {
           $other_title = l($child->arr[1]->str . ' ', $base_url . '/fedora/repository/' . $child->str);
           $other_researcher = $child->arr[0]->str;
           $other_date = 'Date';
-//        var_dump($this->pid);
-//        var_dump($child->str);
           if ($child->str != $this->pid) {
             $rows2[] = array($other_title, $other_researcher, $other_date);
           }
@@ -158,11 +163,13 @@ class IslandoraChem {
     drupal_add_css($pathTojs . 'ChemDoodleWeb/install/ChemDoodleWeb.css');
     drupal_add_js($pathTojs . 'ChemDoodleWeb/install/ChemDoodleWeb-libs.js');
     drupal_add_js($pathTojs . 'ChemDoodleWeb/install/ChemDoodleWeb.js');
+    
 //    Grab the structure file and clean it up so that it displays in the JS viewer
 //    $file = trim(file_get_contents($fedora_url . '/objects/' . $this->pid . '/datastreams/MOL/content'));
     $collectionHelper_mol = new CollectionClass();
     $file = trim($collectionHelper_mol->getStream($this->pid, "MOL"));
     $file = mol_clean($file);
+    
 //    Put in the JS for the viewer and load the MOL file
     $content2 = '<script>
                     var transformBallAndStick = new ChemDoodle.TransformCanvas3D("transformBallAndStick", 250, 250);
@@ -484,10 +491,10 @@ $content5 = str_replace("\n", '</BR>', $geshi->parse_code());
         for ($i = 0; $i < $nodeno; $i++) {
           $iupac = $iupac_xml->getElementsByTagName('item')->item($i)->nodeValue;
           $iupac = htmlentities(ucfirst(strtolower($iupac)));
-          $synonym .= ' ' . $iupac;
+          $synonym .= ', ' . $iupac;
         }
 
-        $xmlsynonym = $dom->createElement("alternative", $synonym);
+        $xmlsynonym = $dom->createElement("alternative", ltrim($synonym, ','));
         $xmlsynonym->setAttribute("id", "s1");
         $xmlsynonym->setAttribute("type", "synonym");
         $xmlname->appendChild($xmlsynonym);

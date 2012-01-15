@@ -74,7 +74,6 @@ function islandora_chem_sp_required_fedora_objects() {
           'pid' => 'quantumchem-sys:sp_collection',
           'label' => 'Quantumchem',
           'cmodel' => 'islandora:collectionCModel',
-          'parent' => variable_get('fedora_repository_pid', 'islandora:root'),
           'datastreams' => array(
             array(
               'dsid' => 'TN',
