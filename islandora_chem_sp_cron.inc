@@ -27,6 +27,9 @@ function islandora_chem_cron() {
   }
   foreach ($users as $person) {
     $path = $root_path . '/' . file_directory_path() . '/users/' . $person['name'] . '/watch';
+    if (!is_dir($path)) {
+      mkdir($path, 0775, TRUE);
+    }
     drupal_set_message('Path: ' . $path);
     $tmp_path = $path . '/temp';
     $directories[] = $path;
