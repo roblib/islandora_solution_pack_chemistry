@@ -13,6 +13,8 @@ function islandora_chem_cron() {
   module_load_include('inc', 'fedora_repository', 'CollectionManagement');
   module_load_include('inc', 'fedora_repository', 'BatchIngest');
   module_load_include('inc', 'islandora_chem_sp', 'FileConversion');
+  
+  global $base_path;
 
   $users = array();
   $directories = array();
@@ -25,7 +27,7 @@ function islandora_chem_cron() {
     }
   }
   foreach ($users as $person) {
-    $path = '/var/www/drupal/sites/default/files/users/' . $person['name'] . '/watch';
+    $path = $base_path . '/files/users/' . $person['name'] . '/watch';
     $tmp_path = $path . '/temp';
     $directories[] = $path;
   }
