@@ -101,7 +101,8 @@ class IslandoraChem {
       // Again it is possible to have more than once inchi key if the object is a cluster so we have to query for each one
       foreach ($inchi_key as $key) {
         $solr_url = variable_get('fedora_solr_search_url', 'http://localhost:8080/solr');
-        $solr_result = file_get_contents($solr_url . '/select?q=cml.inchikey:' . $key . '&fl=PID,dc.title,dc.contributor&qt=chem');
+        $solr_query = $solr_url . '/select?q=cml.inchikey:' . $key . '&fl=PID,dc.title,dc.contributor';
+        $solr_result = file_get_contents($solr_query);
         $inchi_search = new SimpleXMLElement($solr_result);
         $pid_results = $inchi_search->result;
 
