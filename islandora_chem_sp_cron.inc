@@ -30,7 +30,6 @@ function islandora_chem_cron() {
     if (!is_dir($path)) {
       mkdir($path, 0775, TRUE);
     }
-    drupal_set_message('Path: ' . $path);
     $tmp_path = $path . '/temp';
     $directories[] = $path;
   }
