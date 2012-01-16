@@ -18,7 +18,6 @@ function clean_XYZ($file) {
   if ($ext == 'xyz') {
     $xyz = file($file);
     if (!check_numeric($xyz[0])) {
-      drupal_set_message('Cleaning XYZ file');
       $fp2 = fopen($file, 'w');
       $atoms = count($xyz);
       $str2 = implode("", $xyz);
@@ -26,12 +25,6 @@ function clean_XYZ($file) {
       fwrite($fp2, $str2);
       $return_value = fclose($fp2);
     }
-    else {
-      drupal_set_message('Not cleaning XYZ file');
-    }
-  }
-  else {
-    drupal_set_message('Not an XYZ file');
   }
   return $return_value;
 }
@@ -88,7 +81,7 @@ MODS;
 
   if (!file_exists($new_name)) {
     $path = explode('/', $file);
-    $user_name = $path[8];
+    $user_name = $path[(count($path) - 4)];
     $query = db_query("SELECT value FROM {profile_values} LEFT JOIN users ON profile_values.uid=users.uid WHERE users.name = '%s'", $user_name);
     $full_name = db_result($query);
     if ($full_name == '') {
