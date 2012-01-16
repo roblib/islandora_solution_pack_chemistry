@@ -82,10 +82,15 @@ MODS;
   if (!file_exists($new_name)) {
     $path = explode('/', $file);
     $user_name = $path[(count($path) - 4)];
-    $query = db_query("SELECT value FROM {profile_values} LEFT JOIN users ON profile_values.uid=users.uid WHERE users.name = '%s'", $user_name);
-    $full_name = db_result($query);
-    if ($full_name == '') {
+    $firstname_query = db_query("SELECT value FROM {profile_values} LEFT JOIN users ON profile_values.uid=users.uid LEFT JOIN profile_fields ON profile_fields.fid=profile_values.fid WHERE users.name = '%s' AND profile_fields.name = 'profile_firstname'", $user_name);
+    $first_name = db_result($query);
+    $lastname_query = db_query("SELECT value FROM {profile_values} LEFT JOIN users ON profile_values.uid=users.uid LEFT JOIN profile_fields ON profile_fields.fid=profile_values.fid WHERE users.name = '%s' AND profile_fields.name = 'profile_lastname'", $user_name);
+    $last_name = db_result($lastname_query);
+    if ($last_name == '') {
       $full_name = $user_name;
+    }
+    else {
+      $full_name = $first_name . ' ' . $last_name;
     }
     $mods = str_replace(array('TITLE', 'NAME'), array($title, $full_name), $mods);
     $fh = fopen($new_name, 'w');
