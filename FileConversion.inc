@@ -83,7 +83,7 @@ MODS;
     $path = explode('/', $file);
     $user_name = $path[(count($path) - 4)];
     $firstname_query = db_query("SELECT value FROM {profile_values} LEFT JOIN users ON profile_values.uid=users.uid LEFT JOIN profile_fields ON profile_fields.fid=profile_values.fid WHERE users.name = '%s' AND profile_fields.name = 'profile_firstname'", $user_name);
-    $first_name = db_result($query);
+    $first_name = db_result($firstname_query);
     $lastname_query = db_query("SELECT value FROM {profile_values} LEFT JOIN users ON profile_values.uid=users.uid LEFT JOIN profile_fields ON profile_fields.fid=profile_values.fid WHERE users.name = '%s' AND profile_fields.name = 'profile_lastname'", $user_name);
     $last_name = db_result($lastname_query);
     if ($last_name == '') {
