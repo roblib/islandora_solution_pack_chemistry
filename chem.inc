@@ -77,27 +77,27 @@ class IslandoraChem {
         $inchi_key[] = $key;
       }
       $mw2 = $mw[0][0];
-      
+
 //      The formula is stored with spaces in to conform to the CML standard so we need to get rid of them
 //      Also make the numbers subscript 
       $formula2 = formula_cleanup($formula);
-      
+
 //      Clean up IUPAC name as it's usually ugly. If there isn't one then deal with it gracefully
       $iupac = $ns_xml->molecule->name;
       $iupac = ucfirst(strtolower(ltrim($iupac)));
       if ($iupac == NULL) {
         $iupac = 'Not found';
       };
-      
+
       $synonym = $ns_xml->xpath("//alternative[@id='s1']");
       if ($synonym[0] == '') {
         $synonym[0] = 'None found';
       };
-      
+
       $fragments = $ns_xml->xpath("//alternative[@id='f1']");
 
       $other_list = array();
-      
+
       // Again it is possible to have more than once inchi key if the object is a cluster so we have to query for each one
       foreach ($inchi_key as $key) {
         $solr_url = variable_get('fedora_solr_search_url', 'http://localhost:8080/solr');
@@ -163,13 +163,13 @@ class IslandoraChem {
     drupal_add_css($pathTojs . 'ChemDoodleWeb/install/ChemDoodleWeb.css');
     drupal_add_js($pathTojs . 'ChemDoodleWeb/install/ChemDoodleWeb-libs.js');
     drupal_add_js($pathTojs . 'ChemDoodleWeb/install/ChemDoodleWeb.js');
-    
+
 //    Grab the structure file and clean it up so that it displays in the JS viewer
 //    $file = trim(file_get_contents($fedora_url . '/objects/' . $this->pid . '/datastreams/MOL/content'));
     $collectionHelper_mol = new CollectionClass();
     $file = trim($collectionHelper_mol->getStream($this->pid, "MOL"));
     $file = mol_clean($file);
-    
+
 //    Put in the JS for the viewer and load the MOL file
     $content2 = '<script>
                     var transformBallAndStick = new ChemDoodle.TransformCanvas3D("transformBallAndStick", 250, 250);
@@ -257,7 +257,7 @@ JS;
       module_load_include('php', 'geshifilter', '/geshi/geshi');
       $geshi = new GeSHi($xmlstr_code, 'php');
 //      $content5 = str_replace("\n", '</BR>', SyntaxHighlight::process($xmlstr_code));
-$content5 = str_replace("\n", '</BR>', $geshi->parse_code());
+      $content5 = str_replace("\n", '</BR>', $geshi->parse_code());
 
       $tabset['first_tab']['tabs']['code'] = array(
         '#type' => 'tabpage',
@@ -591,59 +591,59 @@ $content5 = str_replace("\n", '</BR>', $geshi->parse_code());
     $email = $xml->affiliation->email;
 
     $header = array();
-    
+
     $rows = array(
-            array('Name', $fullName), 
-            array('Organization', l($organization, 'islandora/solr/search/' . $organization . '/-/dismax')),
-            array('Position', $position),
-            array('Email', $email),
-            array('Interests', l($interests, 'islandora/solr/search/' . $interests . '/-/dismax')),
-      );
-    
+      array('Name', $fullName),
+      array('Organization', l($organization, 'islandora/solr/search/' . $organization . '/-/dismax')),
+      array('Position', $position),
+      array('Email', $email),
+      array('Interests', l($interests, 'islandora/solr/search/' . $interests . '/-/dismax')),
+    );
+
     $imgPath = $base_path . drupal_get_path('module', 'islandora_chem_sp') . '/images/gnome_stock_person.png';
-    
+
     $tabset['first_tab']['tabs']['image'] = array(
       '#value' => '<img src = "' . $imgPath . '"/>',
     );
-    
+
     $tabset['first_tab']['tabs']['table'] = array(
       '#value' => theme('table', $header, $rows),
     );
-    
+
     $calculations_list = array();
-        $solr_url = variable_get('fedora_solr_search_url', 'http://localhost:8080/solr');
-        $solr_query = $solr_url . '/select?q=dc.contributor:"' . urlencode($fullName) . '"&fl=PID,dc.title,cml.name';
-        $solr_result = file_get_contents($solr_query);
-        $calc_search = new SimpleXMLElement($solr_result);
-        $pid_results = $calc_search->result;
+    $solr_url = variable_get('fedora_solr_search_url', 'http://localhost:8080/solr');
+    $solr_query = $solr_url . '/select?q=dc.contributor:"' . urlencode($fullName) . '"&fl=PID,dc.title,cml.name';
+    $solr_result = file_get_contents($solr_query);
+    $calc_search = new SimpleXMLElement($solr_result);
+    $pid_results = $calc_search->result;
 
-        $rows2 = array();
+    $rows2 = array();
 
-        foreach ($pid_results->children() as $child) {
-          $calc_title = l($child->arr[1]->str . ' ', $base_url . '/fedora/repository/' . $child->str);
-          $calc_name = $child->arr[0]->str;
-          $calc_date = 'Date';
+    foreach ($pid_results->children() as $child) {
+      $calc_title = l($child->arr[1]->str . ' ', $base_url . '/fedora/repository/' . $child->str);
+      $calc_name = $child->arr[0]->str;
+      $calc_date = 'Date';
 //        var_dump($this->pid);
 //        var_dump($child->str);
-          if ($child->str != $this->pid) {
-            $rows2[] = array($calc_title, ucfirst(ltrim($calc_name)), $calc_date);
-          }
-        }
-      
-        $header2 = array('Title', 'Name', 'Date');
-        
+      if ($child->str != $this->pid) {
+        $rows2[] = array($calc_title, ucfirst(ltrim($calc_name)), $calc_date);
+      }
+    }
+
+    $header2 = array('Title', 'Name', 'Date');
+
     $content1 = "</BR><B>Associated calculations</B></BR>";
-      if (!empty($rows2)) {
-        $content1 .= theme('table', $header2, $rows2);
-      }
-      else {
-        $content1 .= "</BR>None found";
-      }
-    
-      $tabset['first_tab']['tabs']['related'] = array(
+    if (!empty($rows2)) {
+      $content1 .= theme('table', $header2, $rows2);
+    }
+    else {
+      $content1 .= "</BR>None found";
+    }
+
+    $tabset['first_tab']['tabs']['related'] = array(
       '#value' => $content1,
     );
-    
+
     return $tabset;
   }
 
@@ -656,13 +656,13 @@ $content5 = str_replace("\n", '</BR>', $geshi->parse_code());
     $filename = '/var/www/drupal/sites/all/modules/islandora_solution_pack_chemistry/images/gnome_stock_person.png';
 
     if (file_exists($filename)) {
-    $_SESSION['fedora_ingest_files']["$dsid"] = $filename;
-    return TRUE;
-    print "Ingest succeeded!";
+      $_SESSION['fedora_ingest_files']["$dsid"] = $filename;
+      return TRUE;
+      print "Ingest succeeded!";
     }
     else {
-     return FALSE;
-     print "Ingest failed!";
+      return FALSE;
+      print "Ingest failed!";
     }
   }
 

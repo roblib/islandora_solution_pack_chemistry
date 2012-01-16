@@ -298,5 +298,5 @@ function islandora_chem_sp_mw_search_form_submit($form, &$form_state) {
   $from = $form_state['values']['search_from'];
   $to = $form_state['values']['search_to'];
 
-  drupal_goto('/islandora/solr/search/cml.mw:[' . $from . '%20TO%20' . $to . ']/-');
+  drupal_goto('islandora/solr/search/cml.mw:[' . $from . '%20TO%20' . $to . ']/-');
 }

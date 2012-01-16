@@ -272,7 +272,8 @@ JS;
       );
       $output .= theme('fieldset', $fieldset_r);
     }
-    return $output;
+    unset($_SESSION['mol']);
+    return $output; 
   }
 
 }
