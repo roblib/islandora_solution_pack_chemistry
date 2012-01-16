@@ -11,7 +11,7 @@ function islandora_chem_cron() {
 
   module_load_include('inc', 'fedora_repository', 'api/fedora_item');
   module_load_include('inc', 'fedora_repository', 'CollectionManagement');
-  module_load_include('inc', 'fedora_repository', 'BatchIngest');
+  module_load_include('inc', 'islandora_batch_ingest', 'BatchIngest');
   module_load_include('inc', 'islandora_chem_sp', 'FileConversion');
 
   $users = array();
