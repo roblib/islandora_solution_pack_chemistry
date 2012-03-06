@@ -17,9 +17,9 @@ function islandora_chem_cron() {
   $users = array();
   $directories = array();
   $directory = '';
-  $root_path=realpath(drupal_get_path('module', 'node').'/../../');
+  $root_path = realpath(drupal_get_path('module', 'node') . '/../../');
 
-  $query = db_query('SELECT name FROM users');
+  $query = db_query('SELECT name FROM {users}');
   while ($result = db_fetch_array($query)) {
     if ($result['name'] != '' && $result['name'] != 'admin') {
       $users[] = $result;

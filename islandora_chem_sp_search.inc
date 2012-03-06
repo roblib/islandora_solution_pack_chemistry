@@ -259,7 +259,7 @@ JS;
   return $form;
 }
 
-function islandora_chem_sp_mw_search_form($form_state) {
+function islandora_chem_sp_mw_search_form(&$form_state) {
 
   $css = drupal_get_path('module', 'islandora_chem_sp') . '/islandora_chem_sp.css';
   drupal_add_css($css);
@@ -283,13 +283,14 @@ function islandora_chem_sp_mw_search_form($form_state) {
   $form['submit'] = array(
     '#type' => 'submit',
     '#value' => t('Search'),
+    '#name' => 'mw_submit',
     '#prefix' => '<div class="mw_range_submit">',
     '#suffix' => '</div>',
   );
 
-  $form['clear'] = array(
-    '#value' => '<div class="clearfix">',
-  );
+//  $form['clear'] = array(
+//    '#value' => '<div class="clearfix">',
+//  );
 
   return $form;
 }
@@ -299,4 +300,447 @@ function islandora_chem_sp_mw_search_form_submit($form, &$form_state) {
   $to = $form_state['values']['search_to'];
 
   drupal_goto('islandora/solr/search/cml.mw:[' . $from . '%20TO%20' . $to . ']/-');
+}
+
+function islandora_chem_sp_advanced_search_form(&$form_state) {
+  $css = drupal_get_path('module', 'islandora_chem_sp') . '/islandora_chem_sp.css';
+  drupal_add_css($css);
+  
+  $form = array();
+
+  $form['first_tab'] = array(
+    '#type' => 'tabpage',
+    '#title' => t('Search'),
+  );
+
+  $form['first_tab']['tabs'] = array(
+    '#type' => 'tabset',
+  );
+
+  $form['first_tab']['tabs']['text_search'] = array(
+    '#type' => 'tabpage',
+    '#title' => t('Search'),
+    '#weight' => 1,
+  );
+  
+  $form['first_tab']['tabs']['text_search']['simple_search'] = array(
+    '#type' => 'textfield',
+    '#prefix' => '<div class="mw_range_submit">',
+    '#suffix' => '</div>',
+  );
+
+  $form['first_tab']['tabs']['text_search']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Search'),
+    '#name' => 'simple_submit',
+    '#prefix' => '<div class="mw_range_submit">',
+    '#suffix' => '</div>',
+  );
+  
+  $form['first_tab']['tabs']['mw_search'] = array(
+    '#type' => 'tabpage',
+    '#title' => t('Molecular weight search'),
+    '#weight' => 2,
+  );
+  
+  $form['first_tab']['tabs']['mw_search']['search_from'] = array(
+    '#type' => 'textfield',
+    '#title' => t('From'),
+    '#size' => 3,
+    '#prefix' => '<div class="mw_range_from">',
+    '#suffix' => '</div>',
+  );
+
+  $form['first_tab']['tabs']['mw_search']['search_to'] = array(
+    '#type' => 'textfield',
+    '#title' => t('To'),
+    '#size' => 3,
+    '#prefix' => '<div class="mw_range_to">',
+    '#suffix' => '</div>',
+  );
+
+  $form['first_tab']['tabs']['mw_search']['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Search'),
+    '#name' => 'mw_range_submit',
+    '#prefix' => '<div class="mw_range_submit">',
+    '#suffix' => '</div>',
+  );
+
+  $form['first_tab']['tabs']['advanced_search'] = array(
+    '#type' => 'tabpage',
+    '#title' => t('Advanced search'),
+    '#weight' => 3,
+  );
+
+  drupal_add_js(drupal_get_path('module', 'scholar') . '/js/Ahah.js');
+  drupal_add_css(drupal_get_path('module', 'scholar') . '/css/Search.css');
+  $num_terms = 1;
+  drupal_set_message('Values: ' . implode(', ', $form_state['values']));
+  if (isset($form_state['values'])) {
+    $values = $form_state['values'];
+    $num_terms = isset($form_state['num_terms']) ? $form_state['num_terms'] : $num_terms;
+  }
+  elseif (isset($_SESSION['islandora_chem_sp']['search']['values'])) {
+    /**
+     * Handles the changing of URL from the initial search page to the actual search page.
+     */
+    $values = $_SESSION['islandora_chem_sp']['search']['values'];
+    $num_terms = count($values['terms']);
+    unset($_SESSION['islandora_chem_sp']['search']['values']); // Forget this for the next page visit.
+  }
+  $terms = array(
+    '#prefix' => '<div id="islandora-chem-sp-search-terms">',
+    '#suffix' => '</div>',
+    '#tree' => TRUE,
+  );
+  for ($i = 0; $i < $num_terms; $i++) {
+    $term = array(
+      '#tree' => TRUE,
+      '#prefix' => '<div>',
+      '#suffix' => '</div>',
+      'field' => array(
+        '#title' => t('Field'),
+        '#type' => 'select',
+        '#default_value' => isset($values['terms'][$i]['field']) ? $values['terms'][$i]['field'] : 'mods.title',
+        '#options' => array(
+          'mods.abstract' => t('Abstract'),
+          'mods.roleTerm' => t('Author Identifier'),
+          'mods.Author' => t('Author'),
+          'mods.title' => t('Title'),
+          'mods.isbn' => t('ISBN'),
+          'mods.issn' => t('ISSN'),
+          'mods.hostTitle' => t('Full Journal Title'),
+          'mods.type' => t('Publication Type'),
+          'dc.title' => t('Title'),
+          'mods.doi' => t('DOI'),
+          'mods.subject' => t('Keywords'),
+          'mods.date' => t('Year published'),
+        )
+      ),
+      'search' => array(
+        '#title' => t('Search'),
+        '#type' => 'textfield',
+        '#default_value' => isset($values['terms'][$i]['search']) ? $values['terms'][$i]['search'] : NULL,
+      ),
+      'hidden_submit' => array(// Used for when the user presses enter on the search field.
+        '#type' => 'submit',
+        '#name' => 'advanced_submit',
+        '#value' => 'Search',
+        '#attributes' => array('style' => 'visibility:hidden;position:fixed;top:-1000px;right:-1000px;')
+      ),
+      'add' => array(
+        '#type' => 'button',
+        '#value' => 'Add Field',
+        '#ahah' => array(
+          'path' => 'advanced_search/field/add',
+          'wrapper' => 'islandora-chem-sp-search-terms',
+          'method' => 'replace',
+          'effect' => 'fade'
+        )
+      ),
+    );
+    if ($i > 0) {
+      $term['remove'] = array(
+        '#type' => 'button',
+        '#field' => $i,
+        '#value' => 'Remove Field',
+        '#name' => 'remove-field-' . $i,
+        '#ahah' => array(
+          'path' => 'advanced_search/field/remove',
+          'wrapper' => 'islandora-chem-sp-search-terms',
+          'method' => 'replace',
+          'effect' => 'fade'
+        )
+      );
+    }
+    $terms[] = $term;
+  }
+  $researchers = array();
+  $result = file_get_contents('http://localhost:8080/solr/select/?q=rels.hasModel:researcherCModel&fl=mads.family,mads.given&rows=10000');
+  $xml = new SimpleXMLElement($result);
+  $array = $xml->xpath('//doc');
+  foreach ($array as $arr) {
+    $family = $arr->xpath('./arr[@name="mads.family"]/str');
+    $given = $arr->xpath('./arr[@name="mads.given"]/str');
+    $researchers[(string) $given[0] . ' ' . (string) $family[0]] = (string) $family[0] . ', ' . (string) $given[0];
+    }
+
+  asort($researchers);
+  
+  $form['first_tab'][ 'tabs']['advanced_search']['content'] = array(
+    'terms' => $terms,
+    'controls' => array(
+      '#type' => 'markup',
+      '#prefix' => '<div class="islandora-chem-sp-search-controls">',
+      '#suffix' => '</div>',
+      'sort' => array(
+        '#title' => t('Sort By'),
+        '#type' => 'select',
+        '#default_value' => isset($values['sort']) ? $values['sort'] : NULL,
+        '#options' => array(
+          NULL => t('Relevance'),
+          'mods.title' => t('Title'),
+          'mods.date' => t('Date Added'),
+        ),
+      ),
+      'order' => array(
+        '#title' => t('Order'),
+        '#type' => 'select',
+        '#default_value' => isset($values['order']) ? $values['order'] : 'asc',
+        '#options' => array(
+          'asc' => t('Ascending'),
+          'desc' => t('Descending'),
+        ),
+      ),
+      'submit' => array(
+        '#type' => 'submit',
+        '#name' => 'advanced_submit',
+        '#value' => 'Search',
+        '#button' => 'search',
+      )
+    ),
+  );
+  
+  return $form;
+}
+
+function islandora_chem_sp_advanced_search_form_validate($form, &$form_state) {
+
+  if ($form_state['values']['search_from'] != NULL && $form_state['values']['search_to'] == NULL) {
+    form_set_error('', t('Both molecular weight boundaries need to be specified!'));
+  }
+  
+  if ($form_state['values']['search_from'] == NULL && $form_state['values']['search_to'] != NULL) {
+    form_set_error('', t('Both molecular weight boundaries need to be specified!'));
+  }
+  
+}
+
+function islandora_chem_sp_advanced_search_form_submit($form, &$form_state) {
+  // Filter on the fields that are populated rather than the button that is pressed
+  // This allows for people to press enter as well which registers as the first submit 
+  // button that is specified.
+//  krumo($form_state);
+  if ($form_state['values']['simple_search'] != NULL) {
+    islandora_chem_sp_simple_search_form_submit($form, $form_state);
+    return;
+  }
+  if ($form_state['values']['search_from'] != NULL) {
+    islandora_chem_sp_mw_search_form_submit($form, $form_state);
+    return;
+  }
+  if ($form_state['values']['terms']['0']['search'] != NULL) {
+    islandora_chem_sp_search_form_submit($form, $form_state);
+    return;
+  }
+}
+
+function islandora_chem_sp_search_form(array &$form_state) {
+  drupal_add_js(drupal_get_path('module', 'scholar') . '/js/Ahah.js');
+  drupal_add_css(drupal_get_path('module', 'scholar') . '/css/Search.css');
+  $num_terms = 1;
+  if (isset($form_state['values'])) {
+    $values = $form_state['values'];
+    $num_terms = isset($form_state['num_terms']) ? $form_state['num_terms'] : $num_terms;
+  }
+  elseif (isset($_SESSION['islandora_chem_sp']['search']['values'])) {
+    /**
+     * Handles the changing of URL from the initial search page to the actual search page.
+     */
+    $values = $_SESSION['islandora_chem_sp']['search']['values'];
+    $num_terms = count($values['terms']);
+    unset($_SESSION['islandora_chem_sp']['search']['values']); // Forget this for the next page visit.
+  }
+  $terms = array(
+    '#prefix' => '<div id="islandora-chem-sp-search-terms">',
+    '#suffix' => '</div>',
+    '#tree' => TRUE,
+  );
+  for ($i = 0; $i < $num_terms; $i++) {
+    $term = array(
+      '#tree' => TRUE,
+      '#prefix' => '<div>',
+      '#suffix' => '</div>',
+      'field' => array(
+        '#title' => t('Field'),
+        '#type' => 'select',
+        '#default_value' => isset($values['terms'][$i]['field']) ? $values['terms'][$i]['field'] : 'mods.title',
+        '#options' => array(
+          'mods.abstract' => t('Abstract'),
+          'mods.roleTerm' => t('Author Identifier'),
+          'mods.Author' => t('Author'),
+          'mods.title' => t('Title'),
+          'mods.isbn' => t('ISBN'),
+          'mods.issn' => t('ISSN'),
+          'mods.hostTitle' => t('Full Journal Title'),
+          'mods.type' => t('Publication Type'),
+          'dc.title' => t('Title'),
+          'mods.doi' => t('DOI'),
+          'mods.subject' => t('Keywords'),
+          'mods.date' => t('Year published'),
+        )
+      ),
+      'search' => array(
+        '#title' => t('Search'),
+        '#type' => 'textfield',
+        '#default_value' => isset($values['terms'][$i]['search']) ? $values['terms'][$i]['search'] : NULL,
+      ),
+      'hidden_submit' => array(// Used for when the user presses enter on the search field.
+        '#type' => 'submit',
+        '#name' => 'text_search',
+        '#value' => 'Search',
+        '#attributes' => array('style' => 'visibility:hidden;position:fixed;top:-1000px;right:-1000px;')
+      ),
+      'add' => array(
+        '#type' => 'button',
+        '#value' => 'Add Field',
+        '#ahah' => array(
+          'path' => 'advanced_search/field/add',
+          'wrapper' => 'islandora-chem-sp-search-terms',
+          'method' => 'replace',
+          'effect' => 'fade'
+        )
+      ),
+    );
+    if ($i > 0) {
+      $term['remove'] = array(
+        '#type' => 'button',
+        '#field' => $i,
+        '#value' => 'Remove Field',
+        '#name' => 'remove-field-' . $i,
+        '#ahah' => array(
+          'path' => 'advanced_search/field/remove',
+          'wrapper' => 'islandora-chem-sp-search-terms',
+          'method' => 'replace',
+          'effect' => 'fade'
+        )
+      );
+    }
+    $terms[] = $term;
+  }
+
+  $researchers = array();
+  $result = file_get_contents('http://localhost:8080/solr/select/?q=rels.hasModel:researcherCModel&fl=mads.family,mads.given&rows=10000');
+  $xml = new SimpleXMLElement($result);
+  $array = $xml->xpath('//doc');
+  foreach ($array as $arr) {
+    $family = $arr->xpath('./arr[@name="mads.family"]/str');
+    $given = $arr->xpath('./arr[@name="mads.given"]/str');
+    $researchers[(string) $given[0] . ' ' . (string) $family[0]] = (string) $family[0] . ', ' . (string) $given[0];
+    }
+
+  asort($researchers);
+  
+  return array(
+    'terms' => $terms,
+    'controls' => array(
+      '#type' => 'markup',
+      '#prefix' => '<div class="islandora-chem-sp-search-controls">',
+      '#suffix' => '</div>',
+      'sort' => array(
+        '#title' => t('Sort By'),
+        '#type' => 'select',
+        '#default_value' => isset($values['sort']) ? $values['sort'] : NULL,
+        '#options' => array(
+          NULL => t('Relevance'),
+          'mods.title' => t('Title'),
+          'mods.date' => t('Date Added'),
+        ),
+      ),
+      'order' => array(
+        '#title' => t('Order'),
+        '#type' => 'select',
+        '#default_value' => isset($values['order']) ? $values['order'] : 'asc',
+        '#options' => array(
+          'asc' => t('Ascending'),
+          'desc' => t('Descending'),
+        ),
+      ),
+      'submit' => array(
+        '#type' => 'submit',
+        '#value' => 'Search',
+        '#button' => 'search',
+      )
+    ),
+  );
+}
+
+/**
+ * Submit hook for the quick search form.
+ * 
+ * @param array $form
+ * @param array $form_state 
+ */
+function islandora_chem_sp_search_form_submit(array $form, array &$form_state) {
+//  $button = $form_state['clicked_button']['#button'];
+  $order = $form_state['values']['order'];
+//  if ($button == 'search') {
+  $_SESSION['islandora_chem_sp']['search']['values'] = $form_state['values'];
+  $_SESSION['islandora_chem_sp']['search']['sort'] = $form_state['values']['sort'];
+  $_SESSION['islandora_chem_sp']['search']['order'] = $form_state['values']['order'];
+  $query = islandora_chem_sp_search_form_build_query($form_state);
+  $form_state['redirect'] = 'islandora/solr/search/' . urlencode($query) . '/'; // Redirect to the search.
+//  }
+//  else {
+//    $query = $form_state['values']['author'];
+//    $form_state['redirect'] = 'islandora/solr/search/mods.author:' . urlencode($query) . '/';
+//  }
+}
+
+/**
+ *
+ * @param array $form_state 
+ */
+function islandora_chem_sp_search_form_build_query(array &$form_state) {
+  $query = 'dc.title:*';
+  $statements = array();
+  foreach ($form_state['values']['terms'] as $term) {
+    $field = $term['field'];
+    $search = trim($term['search']);
+    if (!empty($search)) {
+      $statements[] = "$field:$search";
+    }
+  }
+  $query = !empty($statements) ? implode(' AND ', $statements) : '*'; // Empty return all results. 
+  return $query;
+}
+
+/**
+ *
+ * @param array $form_state 
+ */
+function islandora_chem_sp_search_form_store_sort_in_session(array &$form_state) {
+  $sort = $form_state['values']['sort'];
+  unset($_SESSION['islandora_chem_sp']['search']);
+  if (!empty($sort)) {
+    $order = $form_state['values']['order'];
+    $_SESSION['islandora_chem_sp']['search']['sort'] = $sort . ' ' . $order;
+  }
+}
+
+function islandora_chem_sp_search_advanced_add_field() {
+  module_load_include('inc', 'xml_form_elements', 'Ahah');
+  list($form_id, $form_build_id, $form, $form_state) = Ahah::getFormInfo();
+  $form = Ahah::processForm($form_id, $form, $form_state);
+  $form_state['num_terms'] = count(element_children($form['first_tab'][ 'tabs']['advanced_search']['content']['terms'])) + 1;
+  $form = Ahah::rebuildForm($form_id, $form_build_id, $form, $form_state);
+  Ahah::respond($form['first_tab']['tabs']['advanced_search']['content']['terms']);
+}
+
+function islandora_chem_sp_search_advanced_remove_field() {
+  module_load_include('inc', 'xml_form_elements', 'Ahah');
+  list($form_id, $form_build_id, $form, $form_state) = Ahah::getFormInfo();
+  $form = Ahah::processForm($form_id, $form, $form_state);
+  $field = $form_state['clicked_button']['#field'];
+  array_splice($form_state['values']['terms'], $field, 1);
+  $form_state['num_terms'] = count($form_state['values']['terms']);
+  $form = Ahah::rebuildForm($form_id, $form_build_id, $form, $form_state);
+  Ahah::respond($form['first_tab']['tabs']['advanced_search']['content']['terms']);
+}
+
+function islandora_chem_sp_simple_search_form_submit($form, $form_state) {
+  $search = $form_state['values']['simple_search'];
+  $url = 'islandora/solr/search/' . urlencode($search) . '/-/dismax';
+  drupal_goto($url);
 }

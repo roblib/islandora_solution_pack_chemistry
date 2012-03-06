@@ -15,13 +15,20 @@ function clean_XYZ($file) {
   $ext = strrchr($file, '.');
   $base = preg_replace("/$ext$/", '', $file);
   $ext = substr($ext, 1);
+  drupal_set_message('Extension is: ' . $ext);
   if ($ext == 'xyz') {
     $xyz = file($file);
-    if (!check_numeric($xyz[0])) {
+//    drupal_set_message('First character is: ' . $xyz[0][0]);
+    if (check_numeric($xyz[0][0])) {
+//            drupal_set_message('Is numeric');
+    }
+    if (!check_numeric($xyz[0][0])) {
+//      drupal_set_message('Cleaning file');
       $fp2 = fopen($file, 'w');
       $atoms = count($xyz);
       $str2 = implode("", $xyz);
       $str2 = $atoms . "\n" . $dir . "\n" . $str2;
+//      drupal_set_message('String: ' . $str2);
       fwrite($fp2, $str2);
       $return_value = fclose($fp2);
     }
@@ -119,7 +126,7 @@ function formula_cleanup($formula) {
   $formula2 = preg_replace('/([0-9])/', '<sub>$1</sub>', $formula2);
 
   $find = array('----', '---', '--', '++++', '+++', '++');
-  $replace = array('<sup>4-</sup>', '<sup>3-</sup>', '<sup>2-</sup>', '<sup>4+</sup>', '<sup>3+</sup>', '<sup>2+</sup>',);
+  $replace = array('<sup>4-</sup>', '<sup>3-</sup>', '<sup>2-</sup>', '<sup>4+</sup>', '<sup>3+</sup>', '<sup>2+</sup>', );
 
   $formula2 = str_replace($find, $replace, $formula2);
 
@@ -331,4 +338,157 @@ function system_mime_type_extension($type) {
   if (!isset($exts))
     $exts = system_mime_type_extensions();
   return isset($exts[$type]) ? $exts[$type] : NULL;
+}
+
+function islandora_chem_sp_convert_spartan($file) {
+  global $base_path;
+  global $base_url;
+  $file_array = array_filter(array_map('trim', file($file)));
+
+  $end = array_search("ENDCART", $file_array, TRUE);
+
+  $new_array = array();
+
+  for ($i = 3; $i < $end; $i++) {
+    $new_array[] = $file_array[$i];
+  }
+
+  $atomic_number = array(
+    '23',
+    '22',
+    '21',
+    '20',
+    '19',
+    '18',
+    '17',
+    '16',
+    '15',
+    '14',
+    '13',
+    '12',
+    '11',
+    '10',
+    '9',
+    '8',
+    '7',
+    '6',
+    '5',
+    '4',
+    '3',
+    '2',
+    '1',
+  );
+
+  $element = array(
+    'V',
+    'Ti',
+    'Sc',
+    'Ca',
+    'K',
+    'Ar',
+    'Cl',
+    'S',
+    'P',
+    'Si',
+    'Al',
+    'Mg',
+    'Na',
+    'Ne',
+    'F',
+    'O',
+    'N',
+    'C',
+    'B',
+    'Be',
+    'Li',
+    'He',
+    'H',
+  );
+
+  $output_array = array();
+
+  foreach ($new_array as $line) {
+    $line_array = explode('  ', $line);
+    $line_array[0] = str_replace($atomic_number, $element, $line_array[0]);
+    $output_array[] = implode(' ', $line_array);
+  }
+
+  $new_file = file_directory_path() . '/temp/new.xyz';
+
+  $fh = fopen($new_file, 'w');
+  fwrite($fh, implode("\n", $output_array));
+  fclose($fh);
+
+  clean_XYZ($new_file);
+
+  return $new_file;
+}
+
+function islandora_chem_sp_convert_spartan_output($file) {
+
+  global $base_path;
+  global $base_url;
+  $file_array = array_values(array_filter(array_map('trim', file($file))));
+//  var_dump($file_array);  
+  $coords_header = array_search("Atom            X             Y             Z", $file_array, TRUE);
+  $start = ($coords_header + 2);
+
+  $end = islandora_chem_sp_array_search("Point Group =", $file_array);
+
+  $length = $end - $start;
+
+  $coords_array = array_slice($file_array, $start, $length);
+
+  $output_array = array();
+
+  foreach ($coords_array as $coords) {
+    $coords_components = explode(' ', trim($coords));
+    foreach ($coords_components as $key => $component) {
+      if ($component == NULL) {
+        unset($coords_components[$key]);
+      }
+    }
+    $coords_components = array_values($coords_components);
+    $output_array[] = $coords_components[1] . '  ' . $coords_components[3] . '  ' . $coords_components[4] . '  ' . $coords_components[5];
+  }
+
+  $new_file = file_directory_path() . '/temp/new.xyz';
+
+  $fh = fopen($new_file, 'w');
+  fwrite($fh, implode("\n", $output_array));
+  fclose($fh);
+
+  clean_XYZ($new_file);
+
+  return $new_file;
+}
+
+function islandora_chem_sp_url_exists($url) {
+  // Version 4.x supported
+  $handle = curl_init($url);
+  if (FALSE === $handle) {
+    return FALSE;
+  }
+  curl_setopt($handle, CURLOPT_HEADER, FALSE);
+  curl_setopt($handle, CURLOPT_FAILONERROR, TRUE);  // this works
+  curl_setopt($handle, CURLOPT_HTTPHEADER, Array("User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.15) Gecko/20080623 Firefox/2.0.0.15")); // request as if Firefox    
+  curl_setopt($handle, CURLOPT_NOBODY, TRUE);
+  curl_setopt($handle, CURLOPT_RETURNTRANSFER, FALSE);
+  $connectable = curl_exec($handle);
+  curl_close($handle);
+  return $connectable;
+}
+
+function islandora_chem_sp_array_search($needle = NULL, $haystack_array = NULL, $skip = 0) {
+  if ($needle == NULL || $haystack_array == NULL)
+    die('$needle and $haystack_array are mandatory for functie my_array_search()');
+  foreach ($haystack_array as $key => $eval) {
+    if ($skip != 0) {
+      $eval = substr($eval, $skip);
+    }
+    if (stristr($eval, $needle) !== FALSE) {
+      return $key;
+    }
+  }
+  return FALSE;
 }

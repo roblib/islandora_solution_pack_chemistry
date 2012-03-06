@@ -191,7 +191,7 @@ function islandora_chem_sp_menu() {
     'type' => MENU_CALLBACK,
     'access arguments' => array('view fedora collection'),
   );
- 
+
   $items['r_autocomplete'] = array(
     'title' => 'Auto Complete List of Researchers.',
     'description' => 'Lists Researchers.',
@@ -200,7 +200,7 @@ function islandora_chem_sp_menu() {
     'access arguments' => array('view fedora collection'), // Use something fedora specific.
     'type' => MENU_CALLBACK,
   );
-  
+
   $items['i_autocomplete'] = array(
     'title' => 'Auto Complete List of Institutions.',
     'description' => 'Lists Institutions.',
@@ -209,7 +209,51 @@ function islandora_chem_sp_menu() {
     'access arguments' => array('view fedora collection'), // Use something fedora specific.
     'type' => MENU_CALLBACK,
   );
+
+  $items['ingest'] = array(
+    'title' => t('Ingest'),
+    'file' => 'islandora_chem_sp_blocks.inc',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('islandora_chem_sp_ingest_form'),
+    'type' => MENU_NORMAL_ITEM, //MENU_CALLBACK,
+    'access arguments' => array('ingest new fedora objects'),
+  );
+
+  $items['advanced_search'] = array(
+    'title' => t('Advanced search'),
+    'file' => 'islandora_chem_sp_search.inc',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('islandora_chem_sp_advanced_search_form'),
+    'type' => MENU_NORMAL_ITEM, //MENU_CALLBACK,
+    'access arguments' => array('view fedora collection'),
+  );
+
+  $items['advanced_search/field/add'] = array(
+    'file' => 'islandora_chem_sp_search.inc',
+    'page callback' => 'islandora_chem_sp_search_advanced_add_field',
+    'access callback' => 'user_access',
+    'access arguments' => array('view fedora collection'),
+    'type' => MENU_CALLBACK,
+  );
+
+  $items['advanced_search/field/remove'] = array(
+    'file' => 'islandora_chem_sp_search.inc',
+    'page callback' => 'islandora_chem_sp_search_advanced_remove_field',
+    'access callback' => 'user_access',
+    'access arguments' => array('view fedora collection'),
+    'type' => MENU_CALLBACK,
+  );
   
+  $items['home'] = array(
+    'title' => t('Home'),
+    'file' => 'islandora_chem_sp_home.inc',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('islandora_chem_sp_user_login_form'),
+    'access callback' => 'user_access',
+    'access arguments' => array('view fedora collection'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+
   return $items;
 }
 
@@ -243,6 +287,7 @@ function islandora_chem_sp_download_form($form_state, $pid) {
 
 function islandora_chem_sp_block($op = 'list', $delta = 0, $edit = array()) {
   module_load_include('inc', 'islandora_chem_sp', 'islandora_chem_sp_search');
+  module_load_include('inc', 'islandora_chem_sp', 'islandora_chem_sp_blocks');
 
   switch ($op) {
 
@@ -253,19 +298,33 @@ function islandora_chem_sp_block($op = 'list', $delta = 0, $edit = array()) {
       $blocks[0]['theme'] = 'corporate';
       $blocks[0]['region'] = 'sidebar_first';
       $blocks[0]['weight'] = -7;
+
+      $blocks[1]['info'] = t('Ingest block');
+      $blocks[1]['cache'] = BLOCK_NO_CACHE;
+
       return $blocks;
 
     case 'view':
-      $block['subject'] = t('Molecular weight search');
 
-      $block['content'] = drupal_get_form('islandora_chem_sp_mw_search_form');
+      if ($delta == 0) {
+
+        $block['subject'] = t('Molecular weight search');
+
+        $block['content'] = drupal_get_form('islandora_chem_sp_mw_search_form');
+      }
+      elseif ($delta == 1) {
+
+        $block['subject'] = t('Ingest block');
+
+        $block['content'] = drupal_get_form('islandora_chem_sp_ingest_form');
+      }
 
       return $block;
   }
 }
 
 function islandora_chem_sp_islandora_solr_primary_display() {
-   return array(
+  return array(
     'islandora_chem_sp' => array(
       'name' => t('Chemistry'),
       'module' => 'islandora_chem_sp',

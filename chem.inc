@@ -34,6 +34,9 @@ class IslandoraChem {
     $pid = $this->pid;
     $fedora_url = variable_get('fedora_base_url', 'http://localhost:8080/fedora');
 
+    $permission = FALSE;
+
+
     $tabset = array();
 
     $tabset['first_tab'] = array(
@@ -44,12 +47,21 @@ class IslandoraChem {
     $tabset['first_tab']['tabs'] = array(
       '#type' => 'tabset',
     );
+
+//    if ($permission == FALSE) {
+//      $tabset['first_tab']['tabs']['deny'] = array(
+//        '#value' => t('You do not have permission to view this object!'),
+//      );
+//      return $tabset;
+//    }
+//    
 //    Create path variables 
     $path = drupal_get_path('module', 'Fedora_Repository');
     $fullPath = base_path() . $path;
     $content = "";
     $pathTojs = drupal_get_path('module', 'islandora_chem_sp') . '/js/';
 //    Show the medium sized image of the structure at the top of the view
+//    $content1 = '<img src="http://192.168.200.128:8080/fedora/objects/quantumchem:8272/datastreams/MEDIUM/content" />';
     $content1 = '<img src="' . $base_url . '/fedora/repository/' . $this->pid . '/MEDIUM/MEDIUM.jpg" />';
 //    Load the XML from the CML and DC datastreams
     $collectionHelper = new CollectionClass();
@@ -101,22 +113,22 @@ class IslandoraChem {
       // Again it is possible to have more than once inchi key if the object is a cluster so we have to query for each one
       foreach ($inchi_key as $key) {
         $solr_url = variable_get('fedora_solr_search_url', 'http://localhost:8080/solr');
-        $solr_query = $solr_url . '/select?q=cml.inchikey:' . $key . '&fl=PID,dc.title,dc.contributor';
+        $solr_query = $solr_url . '/select?q=cml.inchikey:' . $key . '&fl=PID,dc.title,dc.contributor&rows=20';
         $solr_result = file_get_contents($solr_query);
         $inchi_search = new SimpleXMLElement($solr_result);
         $pid_results = $inchi_search->result;
-
         $rows2 = array();
 
         foreach ($pid_results->children() as $child) {
           $other_title = l($child->arr[1]->str . ' ', $base_url . '/fedora/repository/' . $child->str);
           $other_researcher = $child->arr[0]->str;
-          $other_date = 'Date';
+//          $other_date = 'Date';
           if ($child->str != $this->pid) {
             $rows2[] = array($other_title, $other_researcher, $other_date);
           }
         }
       }
+//      var_dump($rows2);
 //      Get the URL to chemspider if it exists and create a link from it
       $spider_url = $ns_xml->molecule->metadata->attributes()->content;
 
@@ -145,7 +157,7 @@ class IslandoraChem {
       $header2 = array(
         'Title',
         'Researcher',
-        'Date created',
+//        'Date created',
       );
 
       $content1 .= theme('table', $header, $rows);
@@ -280,13 +292,15 @@ JS;
    * @return string 
    */
   function chem2mol($parameterArray = NULL, $dsid, $file, $file_ext) {
+    module_load_include('inc', 'islandora_chem_sp', 'FileConversion');
     $file_suffix = '-' . $dsid . '.' . $file_ext;
     $returnValue = TRUE;
     $filename = $file . $file_suffix;
     $filename = str_replace(" ", "-", $filename);
+    clean_XYZ($file);
 //  Call openbabel and convert the file to MOL. (No longer needed - Create the 3D structure so that it looks good in the 3D viewer)
     if (!file_exists($file . "svg")) {
-      system("obabel \"$file\" --title -omol -xw -O\"$filename\" > /dev/null 2>&1", $returnValue);
+      system("obabel \"$file\" --title -omol -xw -O\"$filename\"", $returnValue);
     }
     else {
       $returnValue = '0';
@@ -312,15 +326,17 @@ JS;
    * @return string 
    */
   function chem2jpg($parameterArray, $dsid, $file, $file_ext) {
+    module_load_include('inc', 'islandora_chem_sp', 'FileConversion');
     $file_suffix = '-' . $dsid . '.' . $file_ext;
     $filename = $file . $file_suffix;
     $filename = str_replace(" ", "-", $filename);
     $height = $parameterArray['height'];
     $width = $parameterArray['width'];
     $returnValue = TRUE;
+    clean_XYZ($file);
 //  OpenBabel won't convert directly to jpg so we need to go via svg
     if (!file_exists($file . "png")) {
-      system("obabel \"$file\" -opng -O\"$file\".png --title -xw -c &>/dev/null", $returnvalue);
+      system("obabel \"$file\" -opng -O\"$file\".png --title -xw -c", $returnvalue);
     }
     else {
       $returnValue = '0';
@@ -328,7 +344,7 @@ JS;
     $returnValue = '0';
 //  Once the svg is created we need to convert it to jpg using imagemagick
     if (!file_exists($filename)) {
-      system("convert \"$file\".png -resize \"$width\"x\"$width\" -gravity center -modulate 100,140 -extent \"$width\"x\"$width\" \"$filename\" 2>&1 &", $returnValue);
+      system("convert \"$file\".png -resize \"$width\"x\"$width\" -gravity center -modulate 100,140 -extent \"$width\"x\"$width\" \"$filename\"", $returnValue);
       unlink($file . '.png');
     }
     else {
@@ -356,10 +372,13 @@ JS;
    */
   public function chem2cml($parameterArray = NULL, $dsid, $file, $file_ext) {
     module_load_include('inc', 'fedora_repository', 'api/fedora_item');
+    module_load_include('inc', 'islandora_chem_sp', 'FileConversion');
     $file_suffix = '_' . $dsid . '.' . $file_ext;
     $returnValue = TRUE;
     $filename = $file . $file_suffix;
     $filename = str_replace(" ", "-", $filename);
+//    drupal_set_message('File: ' . $file);
+    clean_XYZ($file);
 //  Run various system calls to generate the data
     if (!file_exists($filename)) {
       exec("obprop \"$file\"", $return, $returnValue1);
@@ -425,22 +444,29 @@ JS;
       $rdf = new DOMDocument();
       $rdf_url = 'http://rdf.chemspider.com/' . htmlentities($inchi_key[0]);
 
-      $url_headers = get_headers($rdf_url);
+      if (islandora_chem_sp_url_exists('http://rdf.chemspider.com/')) {
 
-      if ($url_headers[0] == 'HTTP/1.1 302 Found') {
-        $rdf->load($rdf_url);
-        $trivial = $rdf->getElementsByTagName('Description')->item(13)->nodeValue;
+        $url_headers = get_headers($rdf_url);
+
+        if ($url_headers[0] == 'HTTP/1.1 302 Found') {
+          $rdf->load($rdf_url);
+          $trivial = $rdf->getElementsByTagName('Description')->item(13)->nodeValue;
 //    The URL to the chemspider entry is also generated
-        if ($rdf->getElementsByTagName('Description')->item(1)) {
-          $spider_url = $rdf->getElementsByTagName('Description')->item(1)->getAttribute('rdf:about');
+          if ($rdf->getElementsByTagName('Description')->item(1)) {
+            $spider_url = $rdf->getElementsByTagName('Description')->item(1)->getAttribute('rdf:about');
+          }
+          else {
+            $trivial = 'No synonyms available';
+          }
         }
         else {
+          $trivial = 'Structure not found';
           $spider_url = '';
         }
       }
       else {
-        $trivial = 'Not found';
-        $spider_url = '';
+        $trivial = 'Structure not found';
+        drupal_set_message(t('Could not connect to http://rdf.chemspider.com/'), 'warning');
       }
 
       $fragment = trim(str_replace(';', ' ', $fragment[0]));
@@ -478,27 +504,33 @@ JS;
       $xmltrivial->setAttribute("id", "n0");
       $xmltrivial->setAttribute("convention", "IUPAC:trivial");
       $xmlname->appendChild($xmltrivial);
+
 //    Synonyms are retrieved from the pubchem/NCI db and added to the XML for searching
       if (isset($inchi_key[0])) {
         $url = 'http://cactus.nci.nih.gov/chemical/structure/' . urlencode($inchi_key[0]) . '/names/xml';
 
-        $iupac_xml = new DOMDocument();
-        $iupac_xml->load($url);
-        $nodes = $iupac_xml->getElementsByTagName('item');
-        $nodeno = $nodes->length;
+        if (islandora_chem_sp_url_exists('http://cactus.nci.nih.gov')) {
+          $iupac_xml = new DOMDocument();
+          $iupac_xml->load($url);
+          $nodes = $iupac_xml->getElementsByTagName('item');
+          $nodeno = $nodes->length;
 
-        $synonym = '';
+          $synonym = '';
 
-        for ($i = 0; $i < $nodeno; $i++) {
-          $iupac = $iupac_xml->getElementsByTagName('item')->item($i)->nodeValue;
-          $iupac = htmlentities(ucfirst(strtolower($iupac)));
-          $synonym .= ', ' . $iupac;
+          for ($i = 0; $i < $nodeno; $i++) {
+            $iupac = $iupac_xml->getElementsByTagName('item')->item($i)->nodeValue;
+            $iupac = htmlentities(ucfirst(strtolower($iupac)));
+            $synonym .= ', ' . $iupac;
+          }
+
+          $xmlsynonym = $dom->createElement("alternative", ltrim($synonym, ','));
+          $xmlsynonym->setAttribute("id", "s1");
+          $xmlsynonym->setAttribute("type", "synonym");
+          $xmlname->appendChild($xmlsynonym);
         }
-
-        $xmlsynonym = $dom->createElement("alternative", ltrim($synonym, ','));
-        $xmlsynonym->setAttribute("id", "s1");
-        $xmlsynonym->setAttribute("type", "synonym");
-        $xmlname->appendChild($xmlsynonym);
+        else {
+          drupal_set_message(t('Could not connect to @url', array('@url' => $url)), 'warning');
+        }
       }
       else {
         $xmlsynonym = $dom->createElement("alternative", 'None found');

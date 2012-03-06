@@ -31,6 +31,7 @@
         <type>text/xml</type>
         <type>text/plain</type>
         <type>application/xml</type>
+        <type>custom/none</type>
     </mimetypes>
     <ingest_rules>
         <rule>
@@ -59,6 +60,7 @@
             <applies_to>chemical/x-ncbi-asn1-spec</applies_to>
             <applies_to>chemical/x-gamess-output</applies_to>
             <applies_to>chemical/x-qchem-output</applies_to>
+            <applies_to>custom/none</applies_to>
             <ingest_methods>
                 <ingest_method class="IslandoraChem" dsid="TN"
                     file="chem.inc" method="chem2jpg"
