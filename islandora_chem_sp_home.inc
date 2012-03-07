@@ -45,11 +45,11 @@ function islandora_chem_sp_user_login_form(&$form_state) {
     '#type' => 'tabpage',
     '#title' => t('Conversations'),
   );
-  
+
   $form['first_tab']['tabs']['conversations']['tabs'] = array(
     '#type' => 'tabset',
   );
-  
+
   $form['first_tab']['tabs']['conversations']['tabs']['new_groups'] = array(
     '#type' => 'tabpage',
     '#title' => t('Group content')
@@ -58,16 +58,16 @@ function islandora_chem_sp_user_login_form(&$form_state) {
   $form['first_tab']['tabs']['conversations']['tabs']['new_groups']['content'] = array(
     '#value' => views_embed_view('og_mytracker'),
   );
-  
- $form['first_tab']['tabs']['conversations']['tabs']['unread_groups'] = array(
+
+  $form['first_tab']['tabs']['conversations']['tabs']['unread_groups'] = array(
     '#type' => 'tabpage',
     '#title' => t('Unread group content')
   );
 
   $form['first_tab']['tabs']['conversations']['tabs']['unread_groups']['content'] = array(
     '#value' => views_embed_view('og_unread'),
-  );  
- 
+  );
+
   $form['first_tab']['tabs']['conversations']['tabs']['new_content'] = array(
     '#type' => 'tabpage',
     '#title' => t('Recent site content')
@@ -76,7 +76,7 @@ function islandora_chem_sp_user_login_form(&$form_state) {
   $form['first_tab']['tabs']['conversations']['tabs']['new_content']['content'] = array(
     '#value' => views_embed_view('og_tracker'),
   );
-  
+
   $form['first_tab']['tabs']['people'] = array(
     '#type' => 'tabpage',
     '#title' => t('People')
@@ -393,7 +393,13 @@ function islandora_chem_sp_object_form(&$form_state, $username) {
   $no_of_items = count($rows2);
   $element = 0;
   $GLOBALS['pager_page_array'][$element] = max(0, min((int) $pager_page_array[$element], ((int) $pager_total[$element]) - 1));
-  $GLOBALS['pager_total'][$element] = ceil($no_of_items / $total);
+ 
+  if ($total == 0) {
+    $GLOBALS['pager_total'][$element] = 0;
+  }
+  else {
+    $GLOBALS['pager_total'][$element] = ceil($no_of_items / $total);
+  }
 
   $header2_1 = array('Title', 'Name', 'User');
   $header_2_3 = array('All');
