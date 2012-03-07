@@ -3,6 +3,13 @@
 /**
  * @file
  */
+
+/**
+ * Form to display content on the user's home page
+ * @global type $user
+ * @param type $form_state
+ * @return type 
+ */
 function islandora_chem_sp_user_login_form(&$form_state) {
   global $user;
   $form = array();
@@ -101,6 +108,15 @@ function islandora_chem_sp_user_login_form(&$form_state) {
   return $form;
 }
 
+/**
+ * Submit function for home page form
+ * Checks which submit button was clicked and acts appropriately
+ * @todo When the return key is pressed work out which button the user wanted to click
+ * from elements that the user had filled in
+ * @global type $user
+ * @param type $form
+ * @param type $form_state 
+ */
 function islandora_chem_sp_user_login_form_submit($form, &$form_state) {
   module_load_include('inc', 'islandora_chem_sp', 'islandora_chem_sp_search');
   module_load_include('module', 'islandora_xacml_editor', 'islandora_xacml_editor');
@@ -227,6 +243,17 @@ function islandora_chem_sp_user_login_form_submit($form, &$form_state) {
   }
 }
 
+/**
+ * Form to display the objects that the user owns
+ * Also allows the permissions to be changed on the object by
+ * editing the XACML policy
+ * @todo Possibly add in individual users to assign permissions to
+ * @global type $base_url
+ * @global type $user
+ * @param type $form_state
+ * @param type $username
+ * @return string 
+ */
 function islandora_chem_sp_object_form(&$form_state, $username) {
   module_load_include('inc', 'fedora_repository', 'ObjectHelper');
   module_load_include('inc', 'fedora_repository', 'api/fedora_item');
@@ -236,8 +263,7 @@ function islandora_chem_sp_object_form(&$form_state, $username) {
   global $user;
 
   $xacml_dsid = 'POLICY';
-  $groups = islandora_chem_sp_og_users_groups($user->name);
-//  var_dump($groups);
+  $groups = islandora_chem_sp_og_users_groups();
 
   $page = isset($_GET['page']) ? $_GET['page'] : '0';
   $items_per_page = 5;
@@ -254,8 +280,8 @@ function islandora_chem_sp_object_form(&$form_state, $username) {
   $open_read_pids = array();
   $open_write_pids = array();
   $group_headers = array();
+  $total = $calc_search->result['numFound'];
 
-//  krumo($solr_result);
   foreach ($pid_results->children() as $child) {
     $pid = (string) $child->str;
     $pid_list[] = $pid;
@@ -365,7 +391,6 @@ function islandora_chem_sp_object_form(&$form_state, $username) {
   }
 
   $no_of_items = count($rows2);
-  $total = 10;
   $element = 0;
   $GLOBALS['pager_page_array'][$element] = max(0, min((int) $pager_page_array[$element], ((int) $pager_total[$element]) - 1));
   $GLOBALS['pager_total'][$element] = ceil($no_of_items / $total);
@@ -386,6 +411,7 @@ function islandora_chem_sp_object_form(&$form_state, $username) {
     $content1 .= "</BR>None found";
   }
 
+  //Pretend we're actually doing an SQL query so paging will work
   pager_query("SELECT %d", $items_per_page, 0, NULL, $total);
 
   $output = $content1 . theme('pager');
@@ -412,7 +438,14 @@ function islandora_chem_sp_object_form(&$form_state, $username) {
   return $form;
 }
 
-function islandora_chem_sp_og_users_groups($user) {
+/**
+ * Helper function to bring back the organic groups that
+ * the user is a member of. Strangely, OG doesn't provide this in their
+ * API
+ * @global type $user 
+ * @return type array of organic groups that the user is a member of
+ */
+function islandora_chem_sp_og_users_groups() {
   global $user;
   $rows = array();
   $query = db_query("SELECT a.nid,title FROM {node} a INNER JOIN {og_uid} b ON a.nid = b.nid WHERE b.uid = '%s'", $user->uid);
