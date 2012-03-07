@@ -376,7 +376,6 @@ function islandora_chem_sp_advanced_search_form(&$form_state) {
   drupal_add_js(drupal_get_path('module', 'scholar') . '/js/Ahah.js');
   drupal_add_css(drupal_get_path('module', 'scholar') . '/css/Search.css');
   $num_terms = 1;
-  drupal_set_message('Values: ' . implode(', ', $form_state['values']));
   if (isset($form_state['values'])) {
     $values = $form_state['values'];
     $num_terms = isset($form_state['num_terms']) ? $form_state['num_terms'] : $num_terms;
@@ -456,17 +455,18 @@ function islandora_chem_sp_advanced_search_form(&$form_state) {
     }
     $terms[] = $term;
   }
-  $researchers = array();
-  $result = file_get_contents('http://localhost:8080/solr/select/?q=rels.hasModel:researcherCModel&fl=mads.family,mads.given&rows=10000');
-  $xml = new SimpleXMLElement($result);
-  $array = $xml->xpath('//doc');
-  foreach ($array as $arr) {
-    $family = $arr->xpath('./arr[@name="mads.family"]/str');
-    $given = $arr->xpath('./arr[@name="mads.given"]/str');
-    $researchers[(string) $given[0] . ' ' . (string) $family[0]] = (string) $family[0] . ', ' . (string) $given[0];
-    }
-
-  asort($researchers);
+//  $researchers = array();
+//  $result = file_get_contents('http://localhost:8080/solr/select/?q=rels.hasModel:researcherCModel&fl=mads.family,mads.given&rows=10000');
+//  
+//  $xml = new SimpleXMLElement($result);
+//  $array = $xml->xpath('//doc');
+//  foreach ($array as $arr) {
+//    $family = $arr->xpath('./arr[@name="mads.family"]/str');
+//    $given = $arr->xpath('./arr[@name="mads.given"]/str');
+//    $researchers[(string) $given[0] . ' ' . (string) $family[0]] = (string) $family[0] . ', ' . (string) $given[0];
+//    }
+//
+//  asort($researchers);
   
   $form['first_tab'][ 'tabs']['advanced_search']['content'] = array(
     'terms' => $terms,
