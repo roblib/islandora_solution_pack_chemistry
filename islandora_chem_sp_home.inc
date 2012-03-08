@@ -32,7 +32,7 @@ function islandora_chem_sp_user_login_form(&$form_state) {
   );
 
   $form['first_tab']['tabs']['files']['content'] = array(
-    '#value' => drupal_get_form('islandora_chem_sp_object_form', array($user->name)),
+    '#value' => drupal_get_form('islandora_chem_sp_object_form'),
   );
 
   $form['first_tab']['tabs']['files']['save'] = array(
@@ -254,7 +254,7 @@ function islandora_chem_sp_user_login_form_submit($form, &$form_state) {
  * @param type $username
  * @return string 
  */
-function islandora_chem_sp_object_form(&$form_state, $username) {
+function islandora_chem_sp_object_form(&$form_state) {
   module_load_include('inc', 'fedora_repository', 'ObjectHelper');
   module_load_include('inc', 'fedora_repository', 'api/fedora_item');
   module_load_include('inc', 'islandora_xacml_editor', 'api/Xacml');
@@ -262,166 +262,178 @@ function islandora_chem_sp_object_form(&$form_state, $username) {
   global $base_url;
   global $user;
 
+  $username = $user->name;
   $xacml_dsid = 'POLICY';
   $groups = islandora_chem_sp_og_users_groups();
-
   $page = isset($_GET['page']) ? $_GET['page'] : '0';
   $items_per_page = 5;
   $offset = $page * $items_per_page;
 
   $calculations_list = array();
   $solr_url = variable_get('fedora_solr_search_url', 'http://localhost:8080/solr');
-  $solr_query = $solr_url . '/select?q=dc.contributor:"' . urlencode($username[0]) . '"&fl=PID,dc.title,cml.name&start=' . $offset . '&rows=' . $items_per_page;
-  $solr_result = file_get_contents($solr_query);
-  $calc_search = new SimpleXMLElement($solr_result);
-  $pid_results = $calc_search->result;
-  $pid_list = array();
-  $rows2 = array();
-  $open_read_pids = array();
-  $open_write_pids = array();
-  $group_headers = array();
-  $total = $calc_search->result['numFound'];
+  $solr_query = $solr_url . '/select?q=fgs.ownerId:"' . urlencode($username) . '"%20AND%20rels.hasModel:info\:fedora/quantumchem-sys\:sp_chem_CM&fl=PID,dc.title,cml.name&start=' . $offset . '&rows=' . $items_per_page;
+  $solr_result = @file_get_contents($solr_query);
+  if ($solr_result != NULL) {
+    $calc_search = new SimpleXMLElement($solr_result);
+    $pid_results = $calc_search->result;
+    $pid_list = array();
+    $rows2 = array();
+    $open_read_pids = array();
+    $open_write_pids = array();
+    $group_headers = array();
+    $total = $calc_search->result['numFound'];
 
-  foreach ($pid_results->children() as $child) {
-    $pid = (string) $child->str;
-    $pid_list[] = $pid;
-    $object = new Fedora_Item($pid);
-    $datastreams = $object->get_datastreams_list_as_array();
+    foreach ($pid_results->children() as $child) {
+      $pid = (string) $child->str;
+      $pid_list[] = $pid;
+      $object = new Fedora_Item($pid);
+      $datastreams = $object->get_datastreams_list_as_array();
 
-    if (array_key_exists('POLICY', $datastreams)) {
-      module_load_include('inc', 'islandora_xacml_api', 'XacmlException');
+      if (array_key_exists('POLICY', $datastreams)) {
+        module_load_include('inc', 'islandora_xacml_api', 'XacmlException');
 
-      // here we populate the form
-      $xml = $object->get_datastream_dissemination($xacml_dsid);
+        // here we populate the form
+        $xml = $object->get_datastream_dissemination($xacml_dsid);
 
-      // some basic error handling
-      try {
-        $xacml = new Xacml($xml);
-      } catch (XacmlException $e) {
-        drupal_set_message($e->getMessage());
-        drupal_set_message("Xacml Parser failed to parse $object_pid/$xacml_dsid. It is likely this POLICY wasn't written by the islandora XACML editor, it will have to be modified by hand.");
-        drupal_not_found();
-        exit();
+        // some basic error handling
+        try {
+          $xacml = new Xacml($xml);
+        } catch (XacmlException $e) {
+          drupal_set_message($e->getMessage());
+          drupal_set_message("Xacml Parser failed to parse $object_pid/$xacml_dsid. It is likely this POLICY wasn't written by the islandora XACML editor, it will have to be modified by hand.");
+          drupal_not_found();
+          exit();
+        }
       }
-    }
-    else {
-      $xacml = new Xacml();
-    }
+      else {
+        $xacml = new Xacml();
+      }
 
-    $read_roles = $xacml->viewingRule->getRoles();
-    $write_roles = $xacml->managementRule->getUsers();
+      $read_roles = $xacml->viewingRule->getRoles();
+      $write_roles = $xacml->managementRule->getUsers();
 
 //    var_dump($read_roles);
 //    var_dump($write_roles);
 
-    $cml = $object->get_datastream_dissemination('CML');
-    $cml_xml = new SimpleXMLElement($cml);
-    $name = $cml_xml->xpath('//molecule/name');
+      $cml = $object->get_datastream_dissemination('CML');
+      if ($cml != NULL) {
+        $cml_xml = new SimpleXMLElement($cml);
+        $name = $cml_xml->xpath('//molecule/name');
+      }
+      else {
+        $name = array('Error retrieving name');
+      }
 
-    $dc = $object->get_datastream_dissemination('DC');
-    $dc_xml = new SimpleXMLElement($dc);
-    $title = $dc_xml->xpath('//dc:title');
+      $dc = $object->get_datastream_dissemination('DC');
+      $dc_xml = new SimpleXMLElement($dc);
+      $title = $dc_xml->xpath('//dc:title');
+      if ($title == NULL) {
+        $title = array('Unknown');
+      }
 
-    $calc_title = l((string) $title[0] . ' ', $base_url . '/fedora/repository/' . $pid);
-    $calc_name = (string) $name[0];
+      $calc_title = l((string) $title[0] . ' ', $base_url . '/fedora/repository/' . $pid);
+      $calc_name = (string) $name[0];
 //    if (strlen($calc_name) > 100) {
 //      $calc_name = substr($calc_name, 0, 100);
 //    }
-    $tick_box1 = array(
-      '#type' => 'checkbox',
-      '#name' => 'chem_user_read__' . $pid,
-      '#value' => $xacml->viewingRule->isPopulated(),
-    );
-    $tick_box2 = array(
-      '#type' => 'checkbox',
-      '#name' => 'chem_user_write__' . $pid,
-      '#value' => $xacml->managementRule->isPopulated(),
-    );
-
-    $group_checkboxes = array();
-    $group_headers = array();
-
-    foreach ($groups as $group) {
-
-      $group_headers[] = $group['title'];
-
-      $tick_box3 = $tick_box_group_read_ . $group['nid'];
-      $tick_box3 = array(
+      $tick_box1 = array(
         '#type' => 'checkbox',
-        '#name' => 'chem_group-' . $group['nid'] . '-read__' . $pid,
-        '#value' => in_array($group['title'], $xacml->viewingRule->getRoles()),
+        '#name' => 'chem_user_read__' . $pid,
+        '#value' => $xacml->viewingRule->isPopulated(),
       );
-      $group_checkboxes_string = drupal_render($tick_box3);
-
-      $tick_box4 = $tick_box_group_write_ . $group['nid'];
-      $tick_box4 = array(
+      $tick_box2 = array(
         '#type' => 'checkbox',
-        '#name' => 'chem_group-' . $group['nid'] . '-write__' . $pid,
-        '#value' => in_array($group['title'], $xacml->managementRule->getRoles()),
+        '#name' => 'chem_user_write__' . $pid,
+        '#value' => $xacml->managementRule->isPopulated(),
       );
-      $group_checkboxes_string .= drupal_render($tick_box4);
-      $group_checkboxes[] = $group_checkboxes_string;
+
+      $group_checkboxes = array();
+      $group_headers = array();
+
+      foreach ($groups as $group) {
+
+        $group_headers[] = $group['title'];
+
+        $tick_box3 = $tick_box_group_read_ . $group['nid'];
+        $tick_box3 = array(
+          '#type' => 'checkbox',
+          '#name' => 'chem_group-' . $group['nid'] . '-read__' . $pid,
+          '#value' => in_array($group['title'], $xacml->viewingRule->getRoles()),
+        );
+        $group_checkboxes_string = drupal_render($tick_box3);
+
+        $tick_box4 = $tick_box_group_write_ . $group['nid'];
+        $tick_box4 = array(
+          '#type' => 'checkbox',
+          '#name' => 'chem_group-' . $group['nid'] . '-write__' . $pid,
+          '#value' => in_array($group['title'], $xacml->managementRule->getRoles()),
+        );
+        $group_checkboxes_string .= drupal_render($tick_box4);
+        $group_checkboxes[] = $group_checkboxes_string;
+      }
+
+      $tick_box5 = array(
+        '#type' => 'checkbox',
+        '#name' => 'chem_all_read__' . $pid,
+        '#title' => t('Read'),
+        '#value' => !$xacml->viewingRule->isPopulated(),
+      );
+      $tick_box6 = array(
+        '#type' => 'checkbox',
+        '#name' => 'chem_all_write__' . $pid,
+        '#title' => t('Write'),
+        '#value' => !$xacml->managementRule->isPopulated(),
+      );
+
+      if (!$xacml->viewingRule->isPopulated()) {
+        $open_read_pids[] = $pid;
+      }
+
+      if (!$xacml->managementRule->isPopulated()) {
+        $open_write_pids[] = $pid;
+      }
+
+      $rows2_1 = array($calc_title, ucfirst(ltrim($calc_name)), drupal_render($tick_box1) . drupal_render($tick_box2));
+      $rows2_3 = array(drupal_render($tick_box5) . drupal_render($tick_box6));
+
+      $rows2[] = array_merge($rows2_1, $group_checkboxes, $rows2_3);
     }
 
-    $tick_box5 = array(
-      '#type' => 'checkbox',
-      '#name' => 'chem_all_read__' . $pid,
-      '#title' => t('Read'),
-      '#value' => !$xacml->viewingRule->isPopulated(),
-    );
-    $tick_box6 = array(
-      '#type' => 'checkbox',
-      '#name' => 'chem_all_write__' . $pid,
-      '#title' => t('Write'),
-      '#value' => !$xacml->managementRule->isPopulated(),
-    );
+    $no_of_items = count($rows2);
+    $element = 0;
+    $GLOBALS['pager_page_array'][$element] = max(0, min((int) $pager_page_array[$element], ((int) $pager_total[$element]) - 1));
 
-    if (!$xacml->viewingRule->isPopulated()) {
-      $open_read_pids[] = $pid;
+    if ($total == 0) {
+      $GLOBALS['pager_total'][$element] = 0;
+    }
+    else {
+      $GLOBALS['pager_total'][$element] = ceil($no_of_items / $total);
     }
 
-    if (!$xacml->managementRule->isPopulated()) {
-      $open_write_pids[] = $pid;
-    }
+    $header2_1 = array('Title', 'Name', 'User');
+    $header_2_3 = array('All');
 
-    $rows2_1 = array($calc_title, ucfirst(ltrim($calc_name)), drupal_render($tick_box1) . drupal_render($tick_box2));
-    $rows2_3 = array(drupal_render($tick_box5) . drupal_render($tick_box6));
-
-    $rows2[] = array_merge($rows2_1, $group_checkboxes, $rows2_3);
-  }
-
-  $no_of_items = count($rows2);
-  $element = 0;
-  $GLOBALS['pager_page_array'][$element] = max(0, min((int) $pager_page_array[$element], ((int) $pager_total[$element]) - 1));
- 
-  if ($total == 0) {
-    $GLOBALS['pager_total'][$element] = 0;
-  }
-  else {
-    $GLOBALS['pager_total'][$element] = ceil($no_of_items / $total);
-  }
-
-  $header2_1 = array('Title', 'Name', 'User');
-  $header_2_3 = array('All');
-
-  $header2 = array_merge($header2_1, $group_headers, $header_2_3);
+    $header2 = array_merge($header2_1, $group_headers, $header_2_3);
 
 //  var_dump($header2);
 
-  $content1 = "</BR><B>Files</B></BR>";
-  if (!empty($rows2)) {
-    sort($rows2);
-    $content1 .= theme('table', $header2, $rows2);
+    $content1 = "</BR><B>Files</B></BR>";
+    if (!empty($rows2)) {
+      sort($rows2);
+      $content1 .= theme('table', $header2, $rows2);
+    }
+    else {
+      $content1 .= "</BR>None found";
+    }
+
+    //Pretend we're actually doing an SQL query so paging will work
+    pager_query("SELECT %d", $items_per_page, 0, NULL, $total);
+
+    $output = $content1 . theme('pager');
   }
   else {
-    $content1 .= "</BR>None found";
+    $output = "</BR>None found";
   }
-
-  //Pretend we're actually doing an SQL query so paging will work
-  pager_query("SELECT %d", $items_per_page, 0, NULL, $total);
-
-  $output = $content1 . theme('pager');
-
   $form['content'] = array(
     '#value' => $output,
   );
