@@ -271,7 +271,7 @@ function islandora_chem_sp_object_form(&$form_state) {
 
   $calculations_list = array();
   $solr_url = variable_get('fedora_solr_search_url', 'http://localhost:8080/solr');
-  $solr_query = $solr_url . '/select?q=fgs.ownerId:"' . urlencode($username) . '"%20AND%20rel.hasModel:info\:fedora/quantumchem-sys\:sp_chem_CM&fl=PID,dc.title,cml.name&start=' . $offset . '&rows=' . $items_per_page;
+  $solr_query = $solr_url . '/select?q=fgs.ownerId:"' . urlencode($username) . '"%20AND%20rel.hasModel:info\:fedora/quantumchem-sys\:sp_chem_CM&fl=PID,dc.title,cml.name&qt=standard&start=' . $offset . '&rows=' . $items_per_page;
   $solr_result = @file_get_contents($solr_query);
   if ($solr_result != NULL) {
     $calc_search = new SimpleXMLElement($solr_result);
