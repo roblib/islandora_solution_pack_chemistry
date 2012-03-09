@@ -325,12 +325,16 @@ function islandora_chem_sp_object_form(&$form_state) {
       }
 
       $dc = $object->get_datastream_dissemination('DC');
-      $dc_xml = new SimpleXMLElement($dc);
-      $title = $dc_xml->xpath('//dc:title');
-      if ($title == NULL) {
-        $title = array('Unknown');
+      if ($dc != NULL) {
+        $dc_xml = new SimpleXMLElement($dc);
+        $title = $dc_xml->xpath('//dc:title');
+        if ($title == NULL) {
+          $title = array('Unknown');
+        }
       }
-
+      else {
+        $title = array('Error retrieving title');
+      }
       $calc_title = l((string) $title[0] . ' ', $base_url . '/fedora/repository/' . $pid);
       $calc_name = (string) $name[0];
 //    if (strlen($calc_name) > 100) {
