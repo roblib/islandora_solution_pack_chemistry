@@ -327,6 +327,7 @@ function islandora_chem_sp_object_form(&$form_state) {
       $dc = $object->get_datastream_dissemination('DC');
       if ($dc != NULL) {
         $dc_xml = new SimpleXMLElement($dc);
+        $dc_xml->registerXPathNamespace('dc', 'http://www.openarchives.org/OAI/2.0/oai_dc/');
         $title = $dc_xml->xpath('//dc:title');
         if ($title == NULL) {
           $title = array('Unknown');
