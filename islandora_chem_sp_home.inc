@@ -329,7 +329,6 @@ function islandora_chem_sp_object_form(&$form_state) {
         $dc_xml = new SimpleXMLElement($dc);
         $dc_xml->registerXPathNamespace('dc', 'http://purl.org/dc/elements/1.1/');
         $title = $dc_xml->xpath('//dc:title');
-        var_dump($dc);
         if ($title == NULL) {
           $title = array('Unknown');
         }
