@@ -494,8 +494,9 @@ function islandora_chem_sp_array_search($needle = NULL, $haystack_array = NULL, 
 }
 
 function islandora_chem_sp_object_profile($pid) {
-  $fedora_base = variable_get(fedora_base_url , 'http://localhost:8080/fedora');
-  $url = $fedora_base . '/objects/' . $pid . '?format=xml';
+  $solr_base = variable_get(fedora_solr_search_url , 'http://localhost:8080/solr');
+  $pid = str_replace(':', '\:', $pid);
+  $url = $solr_base . '/select?q=PID:' . $pid . '';
   $contents = @file_get_contents($url);
   if ($contents != NULL) {
     $object = new SimpleXMLElement($contents);
@@ -503,9 +504,8 @@ function islandora_chem_sp_object_profile($pid) {
   else {
     return FALSE;
   }
-  
-  $item['owner'] = $object->objOwnerId;
-  $item['label'] = $object->objLabel;
+  $owner_xml = $object->xpath('//arr[@name="fgs.ownerId"]');
+  $item['owner'] = (string) $owner_xml[0]->str;
   
  return $item;
   
