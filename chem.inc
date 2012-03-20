@@ -33,10 +33,7 @@ class IslandoraChem {
     drupal_add_css(drupal_get_path('module', 'islandora_chem_sp') . 'islandora_chem_sp.css');
     $pid = $this->pid;
     $fedora_url = variable_get('fedora_base_url', 'http://localhost:8080/fedora');
-
     $permission = FALSE;
-
-
     $tabset = array();
 
     $tabset['first_tab'] = array(
@@ -64,10 +61,13 @@ class IslandoraChem {
 //    $content1 = '<img src="http://192.168.200.128:8080/fedora/objects/quantumchem:8272/datastreams/MEDIUM/content" />';
     $content1 = '<img src="' . $base_url . '/fedora/repository/' . $this->pid . '/MEDIUM/MEDIUM.jpg" />';
 //    Load the XML from the CML and DC datastreams
-    $collectionHelper = new CollectionClass();
-    $xmlstr = $collectionHelper->getStream($this->pid, "CML");
-    $collectionHelper2 = new CollectionClass();
-    $xmlstr2 = $collectionHelper2->getStream($this->pid, "DC");
+    $item = new Fedora_Item($pid);
+    $xmlstr = $item->get_datastream_dissemination("CML");
+    $xmlstr2 = $item->get_datastream_dissemination("DC");
+//    $collectionHelper = new CollectionClass();
+//    $xmlstr = $collectionHelper->getStream($this->pid, "CML");
+//    $collectionHelper2 = new CollectionClass();
+//    $xmlstr2 = $collectionHelper2->getStream($this->pid, "DC");
 //    If the CML datastream exists then display the relevant information.
 //    It's unlikely that the DC stream will exist if the CML one doesn't
     $title = '';
