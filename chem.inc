@@ -168,7 +168,7 @@ class IslandoraChem {
         $content1 .= theme('table', $header2, $rows2);
       }
       else {
-        $content1 .= "</BR>None found";
+        $content1 .= "<p>None found</p>";
       }
     }
     else {
