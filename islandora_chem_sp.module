@@ -358,11 +358,13 @@ function islandora_chem_sp_form_alter(&$form, &$form_state, $form_id) {
 */
 function islandora_chem_sp_mail_alter(&$message) {
   drupal_set_message('Change mail! ' . $message['id']);
+  drupal_set_message('Account params: ' . $message['params']['account']);
   switch ($message['id']) {
     case "user_register_admin_created":
     case "user_register_no_approval_required": 
     case "user_register_pending_approval":
     case "user_password_reset": 
+    case "user_status_activated":
     case "user_status_blocked":
     case "user_status_deleted":
     case "logintoboggan_register_no_approval_required":
