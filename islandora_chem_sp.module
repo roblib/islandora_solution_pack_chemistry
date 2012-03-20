@@ -357,7 +357,7 @@ function islandora_chem_sp_form_alter(&$form, &$form_state, $form_id) {
 * Implementation of hook_mail_alter().
 */
 function islandora_chem_sp_mail_alter(&$message) {
-  drupal_set_message('Change mail!');
+  drupal_set_message('Change mail! ' . $message['id']);
   switch ($message['id']) {
     case "user_register_admin_created":
     case "user_register_no_approval_required": 
