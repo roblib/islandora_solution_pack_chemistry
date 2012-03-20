@@ -32,6 +32,9 @@ class IslandoraChem {
     module_load_include('inc', 'islandora_chem_sp', 'FileConversion');
     drupal_add_css(drupal_get_path('module', 'islandora_chem_sp') . 'islandora_chem_sp.css');
     $pid = $this->pid;
+    $object_profile = islandora_chem_sp_object_profile($pid);
+    $uid = islandora_chem_sp_get_uid($object_profile['owner']);
+    var_dump($uid);
     $fedora_url = variable_get('fedora_base_url', 'http://localhost:8080/fedora');
     $permission = FALSE;
     $tabset = array();
@@ -90,7 +93,7 @@ class IslandoraChem {
         $inchi_key[] = $key;
       }
       $mw2 = $mw[0][0];
-
+ 
 //      The formula is stored with spaces in to conform to the CML standard so we need to get rid of them
 //      Also make the numbers subscript 
       $formula2 = formula_cleanup($formula);
@@ -143,7 +146,7 @@ class IslandoraChem {
       $header = array();
       $rows = array(
         array('Title', $title),
-        array('Contributor(s)', l($contributor, $base_url . '/islandora/solr/search/' . preg_replace("/\([^\)]+\)/", "", $contributor) . '/-/dismax')),
+        array('Contributor(s)', l($contributor, 'user/' . $uid) . ' | ' . l('Search', $base_url . '/islandora/solr/search/' . preg_replace("/\([^\)]+\)/", "", $contributor) . '/-/dismax')),
         array('IUPAC name', $iupac),
         array('Synonyms', html_entity_decode($synonym[0])),
         array('File description', $desc),
@@ -181,8 +184,9 @@ class IslandoraChem {
 
 //    Grab the structure file and clean it up so that it displays in the JS viewer
 //    $file = trim(file_get_contents($fedora_url . '/objects/' . $this->pid . '/datastreams/MOL/content'));
-    $collectionHelper_mol = new CollectionClass();
-    $file = trim($collectionHelper_mol->getStream($this->pid, "MOL"));
+    $file = trim($item->get_datastream_dissemination("MOL"));
+//    $collectionHelper_mol = new CollectionClass();
+//    $file = trim($collectionHelper_mol->getStream($this->pid, "MOL"));
     $file = mol_clean($file);
 
 //    Put in the JS for the viewer and load the MOL file
@@ -209,8 +213,9 @@ class IslandoraChem {
       '#weight' => 2,
     );
 //    Display the raw output file as text if it exists
-    $collectionHelper_output3 = new CollectionClass();
-    $xmlstr_output3 = $collectionHelper_output3->getStream($this->pid, "OBJ");
+    $xmlstr_output3 = $item->get_datastream_dissemination("OBJ");
+//    $collectionHelper_output3 = new CollectionClass();
+//    $xmlstr_output3 = $collectionHelper_output3->getStream($this->pid, "OBJ");
 
     $output = '';
 
@@ -251,8 +256,9 @@ JS;
       '#weight' => 3,
     );
 //    Display the raw input file as text if it exists
-    $collectionHelper_input = new CollectionClass();
-    $xmlstr_input = $collectionHelper_input->getStream($this->pid, "INPUT");
+    $xmlstr_input = $item->get_datastream_dissemination("INPUT");
+//    $collectionHelper_input = new CollectionClass();
+//    $xmlstr_input = $collectionHelper_input->getStream($this->pid, "INPUT");
 
     if (!$xmlstr_input == NULL) {
       $content4 = str_replace("\n", '</BR>', $xmlstr_input);
@@ -265,8 +271,9 @@ JS;
       );
     }
 //    Display the raw code as text if it exists
-    $collectionHelper_code = new CollectionClass();
-    $xmlstr_code = $collectionHelper_code->getStream($this->pid, "CODE");
+    $xmlstr_code = $item->get_datastream_dissemination("CODE");
+//    $collectionHelper_code = new CollectionClass();
+//    $xmlstr_code = $collectionHelper_code->getStream($this->pid, "CODE");
 
     if (!$xmlstr_code == NULL) {
       module_load_include('php', 'geshifilter', '/geshi/geshi');

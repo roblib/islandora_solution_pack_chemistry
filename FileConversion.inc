@@ -492,3 +492,28 @@ function islandora_chem_sp_array_search($needle = NULL, $haystack_array = NULL, 
   }
   return FALSE;
 }
+
+function islandora_chem_sp_object_profile($pid) {
+  $url = 'http://localhost:8080/fedora/objects/' . $pid . '?format=xml';
+  $contents = @file_get_contents($url);
+  if ($contents != NULL) {
+    $object = new SimpleXMLElement($contents);
+  }
+  else {
+    return FALSE;
+  }
+  
+  $item['owner'] = $object->objOwnerId;
+  $item['label'] = $object->objLabel;
+  
+ return $item;
+  
+}
+
+function islandora_chem_sp_get_uid($username)
+{    
+    // Function that returns the uid based on the username given
+    $user = db_fetch_object(db_query("SELECT uid FROM users WHERE name='$username'"));
+
+    return $user->uid;
+}
