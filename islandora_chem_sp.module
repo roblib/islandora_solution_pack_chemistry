@@ -243,7 +243,7 @@ function islandora_chem_sp_menu() {
     'access arguments' => array('view fedora collection'),
     'type' => MENU_CALLBACK,
   );
-  
+
   $items['home'] = array(
     'title' => t('Home'),
     'file' => 'islandora_chem_sp_home.inc',
@@ -334,4 +334,46 @@ function islandora_chem_sp_islandora_solr_primary_display() {
       'description' => t("Results displayed in a format suited for chemistry."),
     )
   );
+}
+
+/**
+* Implementation of hook_form_alter().
+*/
+function islandora_chem_sp_form_alter(&$form, &$form_state, $form_id) {
+  switch($form_id) {
+    case 'user_admin_settings':
+      if (is_array($form['email']) && $form['email']['#type'] == 'fieldset') {
+        foreach ($form['email'] AS $key => $value) {
+          if (is_array($value) && $value['#type'] == 'fieldset') {
+            $form['email'][$key]['#description'] .= '<br />' . t('Also available variables are: ') . '!profile_first_name, !profile_last_name, !profile_full_name, !profile_title';
+          }
+        }
+      }
+      break;
+  }
+}
+
+/**
+* Implementation of hook_mail_alter().
+*/
+function islandora_chem_sp_mail_alter(&$message) {
+  switch ($message['id']) {
+    case "user_register_admin_created":
+    case "user_register_no_approval_required": 
+    case "user_register_pending_approval":
+    case "user_password_reset": 
+    case "user_status_blocked":
+    case "user_status_deleted":
+    case "logintoboggan_register_no_approval_required":
+      $token_replacements = array(
+        '!profile_first_name' => $message['params']['account']->profile_first_name,
+        '!profile_last_name' => $message['params']['account']->profile_last_name,
+        '!profile_full_name' => $message['params']['account']->profile_first_name . ' ' . $message['params']['account']->profile_last_name,
+        '!profile_title' => $message['params']['account']->profile_title,
+      );
+      // You can also use $message['params']['account']->uid to get more values related to the user like number of new messages (privatemsg) he/she got on the site
+      $message['subject'] = strtr($message['subject'], $token_replacements);
+      $message['body'][0] = strtr($message['body'][0], $token_replacements);
+      break;
+  }
 }

@@ -83,6 +83,7 @@ class IslandoraChem {
       $desc = $ns_xml->molecule->attributes()->title;
       $mw = $ns_xml->xpath('//scalar');
       $formula = $ns_xml->molecule->formula->attributes()->concise;
+      $smiles = $ns_xml->xpath("//alternative[@id='sm1']");
       $inchi = $ns_xml->molecule->identifier->inchi;
       // Loop through each of the inchikeys as there may be multiple in a cluster
       foreach ($ns_xml->molecule->identifier->inchikey as $key) {
@@ -148,6 +149,7 @@ class IslandoraChem {
         array('File description', $desc),
         array('Molecular weight', $mw2),
         array('Molecular formula', $formula2),
+        array('Canonical smiles', $smiles[0]),
         array('Inchi', $inchi),
         array('Inchikey(s)', implode(', ', $inchi_key)),
         array('Fragments', $fragments[0]),
@@ -410,12 +412,19 @@ JS;
         $fragment = NULL;
       }
 
-//      This calls a python script to generate the molecular fingerprint
-      exec('/opt/ActivePython-2.7/bin/python2.7 ' . drupal_get_path('module', 'islandora_chem_sp') . '/indigo-python-api-1.0.0-linux/fingerprint.py /tmp/checkmol.mol', $fingerprint, $returnValue5);
+      exec("obabel \"$file\" -osmi -O /tmp/checkmol.smi -xc", $return, $returnValue5);
       if ($returnValue5 != '0') {
-        drupal_set_message(t('The molecular fingerprint could not be calculated'), 'error');
+        drupal_set_message(t('The smiles string could not be calculated'), 'error');
         return $returnValue5;
       }
+      
+//      This calls a python script to generate the molecular fingerprint
+      exec('/opt/ActivePython-2.7/bin/python2.7 ' . drupal_get_path('module', 'islandora_chem_sp') . '/indigo-python-api-1.0.0-linux/fingerprint.py /tmp/checkmol.smi', $fingerprint, $returnValue6);
+      if ($returnValue6 != '0') {
+        drupal_set_message(t('The molecular fingerprint could not be calculated'), 'error');
+        return $returnValue6;
+      }
+      
 //      The python script leaves some data in the string it generates so this is stripped out
       $fingerprint = explode(', ', str_replace(array('[', ']', 'L'), array('', '', ''), $fingerprint[0]));
 //      The returned arrays are parsed to obtain the relevant data
@@ -470,6 +479,9 @@ JS;
       }
 
       $fragment = trim(str_replace(';', ' ', $fragment[0]));
+      $smiles = file_get_contents('/tmp/checkmol.smi');
+      $smiles = explode("\t", $smiles);
+      
 //    The molecular fingerprint consists of 117 values which are put into a MySQL db
 //    This allows for substructure searching using a bitwise comparison
       for ($i = 0; $i < 117; $i++) {
@@ -559,6 +571,16 @@ JS;
       $xmlformula->setAttribute("concise", $mf_value);
       $xmlname->appendChild($xmlformula);
 
+      $xmlfingerprint = $dom->createElement("alternative", implode(', ', $fingerprint));
+      $xmlfingerprint->setAttribute("id", "fp1");
+      $xmlfingerprint->setAttribute("type", "fingerprint");
+      $xmlname->appendChild($xmlfingerprint);
+      
+      $xmlsmiles = $dom->createElement("alternative", $smiles[0]);
+      $xmlsmiles->setAttribute("id", "sm1");
+      $xmlsmiles->setAttribute("type", "smiles");
+      $xmlname->appendChild($xmlsmiles);     
+      
       $xmlidentifier = $dom->createElement("identifier");
       $xmlname->appendChild($xmlidentifier);
 
