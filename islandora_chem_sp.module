@@ -358,7 +358,7 @@ function islandora_chem_sp_form_alter(&$form, &$form_state, $form_id) {
 */
 function islandora_chem_sp_mail_alter(&$message) {
   drupal_set_message('Change mail! ' . $message['id']);
-  drupal_set_message('Account params: ' . $message['params']['account']);
+  drupal_set_message('Account params: ' . $message['params']['account']->profile_first_name);
   switch ($message['id']) {
     case "user_register_admin_created":
     case "user_register_no_approval_required": 
@@ -369,9 +369,9 @@ function islandora_chem_sp_mail_alter(&$message) {
     case "user_status_deleted":
     case "logintoboggan_register_no_approval_required":
       $token_replacements = array(
-        '!profile_first_name' => $message['params']['account']->profile_first_name,
-        '!profile_last_name' => $message['params']['account']->profile_last_name,
-        '!profile_full_name' => $message['params']['account']->profile_first_name . ' ' . $message['params']['account']->profile_last_name,
+        '!profile_first_name' => $message['params']['account']->profile_firstname,
+        '!profile_last_name' => $message['params']['account']->profile_lastname,
+        '!profile_full_name' => $message['params']['account']->profile_firstname . ' ' . $message['params']['account']->profile_lastname,
         '!profile_title' => $message['params']['account']->profile_title,
       );
       // You can also use $message['params']['account']->uid to get more values related to the user like number of new messages (privatemsg) he/she got on the site
