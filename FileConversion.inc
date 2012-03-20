@@ -494,7 +494,8 @@ function islandora_chem_sp_array_search($needle = NULL, $haystack_array = NULL, 
 }
 
 function islandora_chem_sp_object_profile($pid) {
-  $url = 'http://localhost:8080/fedora/objects/' . $pid . '?format=xml';
+  $fedora_base = variable_get(fedora_base_url , 'http://localhost:8080/fedora');
+  $url = $fedora_base . '/objects/' . $pid . '?format=xml';
   $contents = @file_get_contents($url);
   if ($contents != NULL) {
     $object = new SimpleXMLElement($contents);
