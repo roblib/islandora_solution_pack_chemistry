@@ -368,7 +368,8 @@ function islandora_chem_sp_mail_alter(&$message) {
       $token_replacements = array(
         '!profile_first_name' => $message['params']['account']->profile_first_name,
         '!profile_last_name' => $message['params']['account']->profile_last_name,
-        '!profile_full_name' => $message['params']['account']->profile_first_name . ' ' . $message['params']['account']->profile_last_name,
+//        '!profile_full_name' => $message['params']['account']->profile_first_name . ' ' . $message['params']['account']->profile_last_name,
+        '!profile_full_name' => 'Bananas',
         '!profile_title' => $message['params']['account']->profile_title,
       );
       // You can also use $message['params']['account']->uid to get more values related to the user like number of new messages (privatemsg) he/she got on the site
