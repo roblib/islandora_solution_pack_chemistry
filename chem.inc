@@ -34,7 +34,6 @@ class IslandoraChem {
     $pid = $this->pid;
     $object_profile = islandora_chem_sp_object_profile($pid);
     $uid = islandora_chem_sp_get_uid($object_profile['owner']);
-    var_dump($uid);
     $fedora_url = variable_get('fedora_base_url', 'http://localhost:8080/fedora');
     $permission = FALSE;
     $tabset = array();
