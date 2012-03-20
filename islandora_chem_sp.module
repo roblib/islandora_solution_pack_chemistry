@@ -358,7 +358,7 @@ function islandora_chem_sp_form_alter(&$form, &$form_state, $form_id) {
 */
 function islandora_chem_sp_mail_alter(&$message) {
   drupal_set_message('Change mail! ' . $message['id']);
-  drupal_set_message('Account params: ' . $message['params']['account']->profile_first_name);
+  drupal_set_message('Account params: ' . $message['params']['account']->profile_firstname);
   switch ($message['id']) {
     case "user_register_admin_created":
     case "user_register_no_approval_required": 
