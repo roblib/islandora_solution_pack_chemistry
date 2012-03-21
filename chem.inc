@@ -35,7 +35,7 @@ class IslandoraChem {
     $object_profile = islandora_chem_sp_object_profile($pid);
     $uid = islandora_chem_sp_get_uid($object_profile['owner']);
     $object_user = user_load($uid);
-    $contributor = $object_user->profile_fullname;
+    $contributor = $object_user->profile_firstname . ' ' . $object_user->profile_lastname;
     if ($contributor == NULL) {
       if ($object_profile['owner'] != NULL) {
         $contributor = $object_profile['owner'];
