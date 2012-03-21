@@ -151,11 +151,19 @@ class IslandoraChem {
       else {
         $spider_entry = 'Not found';
       }
+      
+      if ($contributor == 'Unknown') {
+        $contributor_array = array('Contributor(s)', 'Unknown');
+      }
+      else {
+        $contributor_array = array('Contributor(s)', l($contributor, 'user/' . $uid) . ' | ' . l('Search', $base_url . '/islandora/solr/search/' . preg_replace("/\([^\)]+\)/", "", $contributor) . '/-/dismax'));
+      }
+      
 //      Create a table to display all the data nicely
       $header = array();
       $rows = array(
         array('Title', $title),
-        array('Contributor(s)', l($contributor, 'user/' . $uid) . ' | ' . l('Search', $base_url . '/islandora/solr/search/' . preg_replace("/\([^\)]+\)/", "", $contributor) . '/-/dismax')),
+        $contributor_array,
 //        array('Author(s)', $author),
         array('IUPAC name', $iupac),
         array('Synonyms', html_entity_decode($synonym[0])),
