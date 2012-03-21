@@ -37,6 +37,9 @@ class IslandoraChem {
     $object_user = user_load($uid);
     var_dump($object_user);
     $contributor = $object_user->profile_fullname;
+    if ($contributor == NULL) {
+      $contributor = $object_profile['owner'];
+    }
     $fedora_url = variable_get('fedora_base_url', 'http://localhost:8080/fedora');
     $permission = FALSE;
     $tabset = array();
