@@ -153,10 +153,10 @@ class IslandoraChem {
       }
       
       if ($contributor == 'Unknown') {
-        $contributor_array = array('Contributor(s)', 'Unknown');
+        $contributor_array = array('Contributor', 'Unknown');
       }
       else {
-        $contributor_array = array('Contributor(s)', l($contributor, 'user/' . $uid) . ' | ' . l('Search', $base_url . '/islandora/solr/search/' . preg_replace("/\([^\)]+\)/", "", $contributor) . '/-/dismax'));
+        $contributor_array = array('Contributor', l($contributor, 'user/' . $uid) . ' | ' . l('Search', $base_url . '/islandora/solr/search/' . preg_replace("/\([^\)]+\)/", "", $contributor) . '/-/dismax'));
       }
       
 //      Create a table to display all the data nicely
