@@ -497,7 +497,7 @@ function islandora_chem_sp_object_profile($pid) {
   $solr_base = variable_get('islandora_solr_search_block_url' , 'http://localhost:8080/solr');
   $pid = str_replace(':', '\:', $pid);
   $url = 'http://' . $solr_base . '/select?q=PID:' . $pid . '&qt=standard';
-  var_dump($url);
+//  var_dump($url);
   $contents = @file_get_contents($url);
   if ($contents != NULL) {
     $object = new SimpleXMLElement($contents);
