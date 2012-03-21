@@ -35,10 +35,14 @@ class IslandoraChem {
     $object_profile = islandora_chem_sp_object_profile($pid);
     $uid = islandora_chem_sp_get_uid($object_profile['owner']);
     $object_user = user_load($uid);
-    var_dump($object_user);
     $contributor = $object_user->profile_fullname;
     if ($contributor == NULL) {
-      $contributor = $object_profile['owner'];
+      if ($object_profile['owner'] != NULL) {
+        $contributor = $object_profile['owner'];
+      }
+      else {
+        $contributor = 'Unknown';
+      }
     }
     $fedora_url = variable_get('fedora_base_url', 'http://localhost:8080/fedora');
     $permission = FALSE;
@@ -98,7 +102,7 @@ class IslandoraChem {
         $inchi_key[] = $key;
       }
       $mw2 = $mw[0][0];
- 
+
 //      The formula is stored with spaces in to conform to the CML standard so we need to get rid of them
 //      Also make the numbers subscript 
       $formula2 = formula_cleanup($formula);
@@ -430,14 +434,14 @@ JS;
         drupal_set_message(t('The smiles string could not be calculated'), 'error');
         return $returnValue5;
       }
-      
+
 //      This calls a python script to generate the molecular fingerprint
       exec('/opt/ActivePython-2.7/bin/python2.7 ' . drupal_get_path('module', 'islandora_chem_sp') . '/indigo-python-api-1.0.0-linux/fingerprint.py /tmp/checkmol.smi', $fingerprint, $returnValue6);
       if ($returnValue6 != '0') {
         drupal_set_message(t('The molecular fingerprint could not be calculated'), 'error');
         return $returnValue6;
       }
-      
+
 //      The python script leaves some data in the string it generates so this is stripped out
       $fingerprint = explode(', ', str_replace(array('[', ']', 'L'), array('', '', ''), $fingerprint[0]));
 //      The returned arrays are parsed to obtain the relevant data
@@ -494,7 +498,7 @@ JS;
       $fragment = trim(str_replace(';', ' ', $fragment[0]));
       $smiles = file_get_contents('/tmp/checkmol.smi');
       $smiles = explode("\t", $smiles);
-      
+
 //    The molecular fingerprint consists of 117 values which are put into a MySQL db
 //    This allows for substructure searching using a bitwise comparison
       for ($i = 0; $i < 117; $i++) {
@@ -588,12 +592,12 @@ JS;
       $xmlfingerprint->setAttribute("id", "fp1");
       $xmlfingerprint->setAttribute("type", "fingerprint");
       $xmlname->appendChild($xmlfingerprint);
-      
+
       $xmlsmiles = $dom->createElement("alternative", $smiles[0]);
       $xmlsmiles->setAttribute("id", "sm1");
       $xmlsmiles->setAttribute("type", "smiles");
-      $xmlname->appendChild($xmlsmiles);     
-      
+      $xmlname->appendChild($xmlsmiles);
+
       $xmlidentifier = $dom->createElement("identifier");
       $xmlname->appendChild($xmlidentifier);
 
