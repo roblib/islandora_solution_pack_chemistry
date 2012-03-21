@@ -34,7 +34,9 @@ class IslandoraChem {
     $pid = $this->pid;
     $object_profile = islandora_chem_sp_object_profile($pid);
     $uid = islandora_chem_sp_get_uid($object_profile['owner']);
-    $contributor = user_load($uid)->profile_fullname;
+    $object_user = user_load($uid);
+    var_dump($object_user);
+    $contributor = $object_user->profile_fullname;
     $fedora_url = variable_get('fedora_base_url', 'http://localhost:8080/fedora');
     $permission = FALSE;
     $tabset = array();
@@ -142,7 +144,6 @@ class IslandoraChem {
       else {
         $spider_entry = 'Not found';
       }
-      var_dump($author);
 //      Create a table to display all the data nicely
       $header = array();
       $rows = array(
