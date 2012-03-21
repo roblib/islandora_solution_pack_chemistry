@@ -519,3 +519,11 @@ function islandora_chem_sp_get_uid($username)
 
     return $user->uid;
 }
+
+function islandora_chem_sp_get_fullname($uid)
+{    
+    // Function that returns the uid based on the username given
+    $user = db_fetch_object(db_query("SELECT uid FROM users WHERE name='$username'"));
+
+    return $user->uid;
+}

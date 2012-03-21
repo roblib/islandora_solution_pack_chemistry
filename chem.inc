@@ -34,6 +34,7 @@ class IslandoraChem {
     $pid = $this->pid;
     $object_profile = islandora_chem_sp_object_profile($pid);
     $uid = islandora_chem_sp_get_uid($object_profile['owner']);
+    $contributor = user_load($uid)->profile_fullname;
     $fedora_url = variable_get('fedora_base_url', 'http://localhost:8080/fedora');
     $permission = FALSE;
     $tabset = array();
@@ -73,13 +74,13 @@ class IslandoraChem {
 //    If the CML datastream exists then display the relevant information.
 //    It's unlikely that the DC stream will exist if the CML one doesn't
     $title = '';
-    $contributor = '';
     if (!$xmlstr == NULL) {
 //      Pull out the elements from the XML
       $xml2 = new SimpleXMLElement($xmlstr2);
       $ns_xml2 = $xml2->children('dc', TRUE);
       $title = $ns_xml2->title;
-      $contributor = $ns_xml2->contributor;
+//      $contributor = $ns_xml2->contributor;
+      $author = $ns_xml2->contributor;
       $xml = new SimpleXMLElement($xmlstr);
       $ns_xml = $xml->children();
       $desc = $ns_xml->molecule->attributes()->title;
@@ -141,11 +142,13 @@ class IslandoraChem {
       else {
         $spider_entry = 'Not found';
       }
+      var_dump($author);
 //      Create a table to display all the data nicely
       $header = array();
       $rows = array(
         array('Title', $title),
         array('Contributor(s)', l($contributor, 'user/' . $uid) . ' | ' . l('Search', $base_url . '/islandora/solr/search/' . preg_replace("/\([^\)]+\)/", "", $contributor) . '/-/dismax')),
+//        array('Author(s)', $author),
         array('IUPAC name', $iupac),
         array('Synonyms', html_entity_decode($synonym[0])),
         array('File description', $desc),
