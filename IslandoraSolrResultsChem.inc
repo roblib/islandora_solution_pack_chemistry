@@ -48,7 +48,7 @@ class IslandoraSolrResultsChem extends IslandoraSolrResults {
       $output .= "<div>Sorry, but your search returned no results.</div>";
       return $output;
     }
- 
+
     if (isset($_SESSION['mol'])) {
       $path = drupal_get_path('module', 'islandora_chem_sp');
       $path_to_js = $path . '/js/';
@@ -146,7 +146,7 @@ JS;
 
       $output .= "</div>";
     }
-   
+
     $output .= '<h2>' . $title . '</h2>';
     $output .= '<div id="islandora_solr_result_count">(' . ($solrQueryProcessor->solrStart + 1) . ' - ' . $end . ' of ' . $total . ')</div>';
     $output .= '<div class="content">';
@@ -175,7 +175,7 @@ JS;
   function printResultsChem($results) {
 
     module_load_include('inc', 'fedora_repository', 'CollectionClass');
-    
+
     $items = array();
     $type = "ol";
     $title = NULL;
@@ -209,13 +209,18 @@ JS;
 
       $collectionHelper = new CollectionClass();
       $tn_ds = $collectionHelper->getStream($doc->PID, "TN");
- 
+
       $tn_url = $base_url . '/fedora/repository/' . htmlspecialchars($doc->PID, ENT_QUOTES, 'utf-8') . '/TN/content';
-      
+
       $tn2_url = drupal_get_path('module', 'islandora_chem_sp') . '/images/gnome_stock_person.png';
 //      Check if the TN datastream exists, if it does then display the thumbnail in the search results.
       if (isset($tn_ds)) {
         $tn = '<a href="' . $base_url . '/fedora/repository/' . htmlspecialchars($doc->PID, ENT_QUOTES, 'utf-8') . '"><img src="' . $tn_url . '" /></a>';
+        $rows[][] = $tn;
+        $row++;
+      }
+      elseif ($doc->id != NULL) {
+        $tn = '<img src="' . $base_url . '/' . drupal_get_path('module', 'islandora_chem_sp') . '/images/druplicon.png" /></a>';
         $rows[][] = $tn;
         $row++;
       }
@@ -251,10 +256,14 @@ JS;
           $value = preg_replace('/([0-9]*)/', '<sub>$1</sub>', $value);
           $rows[$row][] = $value;
         }
+        elseif ($field == 'id') {
+          $link_value = ltrim(strstr($value, '/'), '/');
+          $rows[$row][] = l($value, $link_value);
+        }
         else {
-          if (strlen($value) > 250) {
-            $value = substr($value, 0, 250) . '...';
-          }
+//          if (strlen($value) > 250) {
+//            $value = substr($value, 0, 250) . '...';
+//          }
           $rows[$row][] = ucfirst(ltrim($value));
         }
         $row++;
@@ -273,7 +282,7 @@ JS;
       $output .= theme('fieldset', $fieldset_r);
     }
     unset($_SESSION['mol']);
-    return $output; 
+    return $output;
   }
 
 }

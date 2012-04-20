@@ -503,10 +503,12 @@ function islandora_chem_sp_people_form(&$form_state) {
     while ($result = db_fetch_array($query)) {
       $users_array[] = $result;
     }
-    foreach ($users_array as $user_array) {
-      $user_query = db_query("SELECT users.name FROM {users} where uid = '%d'", $user_array);
-      while ($result = db_fetch_array($user_query)) {
-        $interesting_people[$user_array['uid']] = $result['name'];
+    if ($users_array != NULL) {
+      foreach ($users_array as $user_array) {
+        $user_query = db_query("SELECT users.name FROM {users} where uid = '%d'", $user_array);
+        while ($result = db_fetch_array($user_query)) {
+          $interesting_people[$user_array['uid']] = $result['name'];
+        }
       }
     }
   }
