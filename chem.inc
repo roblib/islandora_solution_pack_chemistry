@@ -188,13 +188,18 @@ class IslandoraChem {
         array('Fragments', $fragments[0]),
       );
 
-      $content1 .= theme('table', $header_extra, $rows_extra);
       $content1 .= "</BR><B>Related entries</B></BR>";
       if (!empty($rows2)) {
-        $content1 .= theme('table', $header2, $rows2);
+        $tabset['first_tab']['tabs']['summary']['related'] = array(
+          '#value' => theme('table', $header2, $rows2),
+          '#weight' => 2,
+        );
       }
       else {
-        $content1 .= "<p>None found</p>";
+        $tabset['first_tab']['tabs']['summary']['related'] = array(
+          '#value' => '<p>None found!</p>',
+          '#weight' => 2,
+        );
       }
     }
     else {
@@ -228,9 +233,15 @@ class IslandoraChem {
       '#content' => $content1,
       '#weight' => 1,
     );
-    
+
     $tabset['first_tab']['tabs']['summary']['table'] = array(
       '#value' => theme('table', $header, $rows),
+      '#weight' => 0,
+    );
+
+    $tabset['first_tab']['tabs']['summary']['table2'] = array(
+      '#value' => theme('table', $header_extra, $rows_extra),
+      '#weight' => 1,
     );
 
     $tabset['first_tab']['tabs']['view'] = array(
