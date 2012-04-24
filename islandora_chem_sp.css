@@ -55,3 +55,9 @@ pre span.D{ color:#ff9a5d; } /* Defines */
 .search-text {
     font-weight: bold;
 }
+
+.code-window {
+    height: 500px;
+    width: 500px;
+    overflow: scroll;
+}

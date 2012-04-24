@@ -171,9 +171,6 @@ class IslandoraChem {
         array('Molecular weight', $mw2),
         array('Molecular formula', $formula2),
         array('Canonical smiles', $smiles[0]),
-        array('Inchi', $inchi),
-        array('Inchikey(s)', implode(', ', $inchi_key)),
-        array('Fragments', $fragments[0]),
         array('URL', $spider_entry),
       );
 
@@ -182,8 +179,17 @@ class IslandoraChem {
         'Researcher',
 //        'Date created',
       );
+      
+      $header_extra = array();
+      
+      $rows_extra = array(
+        array('Inchi', $inchi),
+        array('Inchikey(s)', implode(', ', $inchi_key)),
+        array('Fragments', $fragments[0]),
+      );
 
       $content1 .= theme('table', $header, $rows);
+      $content1 .= theme('table', $header_extra, $rows_extra);
       $content1 .= "</BR><B>Related entries</B></BR>";
       if (!empty($rows2)) {
         $content1 .= theme('table', $header2, $rows2);
@@ -251,17 +257,7 @@ JS;
     if (!$xmlstr_output3 == NULL) {
 //      $output .= str_replace("\n", '</BR>', file_get_contents($fedora_url . '/objects/' . $this->pid . '/datastreams/OBJ/content'));
       $output .= str_replace("\n", '</BR>', $xmlstr_output3);
-      if (strlen($output) > 1000) {
-        $content3 = substr($output, 0, 500);
-        $content3 .= ' ...' . "</BR></BR>" . '... ' . substr($output, -500, 500) . "</BR>";
-
-        $download = array(
-          '#type' => 'submit',
-          '#value' => t('Download'),
-        );
-      }
-      else
-        $content3 = $output;
+     $content3 = '<div class="code-window">' . $output . '</div>';
     }
     else {
       $content3 = '<div id="title">No OBJ datastream found</div>';
