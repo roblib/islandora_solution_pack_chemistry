@@ -266,7 +266,7 @@ JS;
     $tabset['first_tab']['tabs']['output'] = array(
       '#type' => 'tabpage',
       '#title' => t('Output file'),
-      '#prefix' => '<div class="code-window">',
+      '#prefix' => '<div class="code_window">',
       '#suffix' => '</div>',
       '#content' => $content3,
       '#weight' => 3,
