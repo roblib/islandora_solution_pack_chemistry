@@ -167,7 +167,6 @@ class IslandoraChem {
 //        array('Author(s)', $author),
         array('IUPAC name', $iupac),
         array('Synonyms', html_entity_decode($synonym[0])),
-        array('File description', $desc),
         array('Molecular weight', $mw2),
         array('Molecular formula', $formula2),
         array('Canonical smiles', $smiles[0]),
@@ -186,6 +185,7 @@ class IslandoraChem {
         array('Inchi', $inchi),
         array('Inchikey(s)', implode(', ', $inchi_key)),
         array('Fragments', $fragments[0]),
+        array('File description', $desc),
       );
 
       $tabset['first_tab']['tabs']['summary'] = array(
