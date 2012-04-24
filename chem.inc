@@ -188,6 +188,13 @@ class IslandoraChem {
         array('Fragments', $fragments[0]),
       );
 
+      $tabset['first_tab']['tabs']['summary'] = array(
+        '#type' => 'tabpage',
+        '#title' => t('Summary'),
+        '#content' => $content1,
+        '#weight' => 1,
+      );
+
       if (!empty($rows2)) {
         $tabset['first_tab']['tabs']['summary']['related'] = array(
           '#title' => t('Related entries'),
@@ -227,13 +234,6 @@ class IslandoraChem {
                     var molecule = ChemDoodle.readMOL(molFile, 1);
                     transformBallAndStick.loadMolecule(molecule);
                  </script>';
-
-    $tabset['first_tab']['tabs']['summary'] = array(
-      '#type' => 'tabpage',
-      '#title' => t('Summary'),
-      '#content' => $content1,
-      '#weight' => 1,
-    );
 
     $tabset['first_tab']['tabs']['summary']['table'] = array(
       '#value' => theme('table', $header, $rows),
