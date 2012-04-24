@@ -31,6 +31,10 @@ class IslandoraChem {
     module_load_include('inc', 'fedora_repository', 'api/fedora_item');
     module_load_include('inc', 'islandora_chem_sp', 'FileConversion');
     drupal_add_css(drupal_get_path('module', 'islandora_chem_sp') . 'islandora_chem_sp.css');
+    drupal_add_js("function popitup(url) {
+	newwindow=window.open(url,'name','height=200,width=150');
+	if (window.focus) {newwindow.focus()}
+	return false;}");
     $pid = $this->pid;
     $object_profile = islandora_chem_sp_object_profile($pid);
     $uid = islandora_chem_sp_get_uid($object_profile['owner']);
