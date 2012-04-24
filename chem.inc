@@ -73,22 +73,24 @@ class IslandoraChem {
     $fullPath = base_path() . $path;
     $content = "";
     $pathTojs = drupal_get_path('module', 'islandora_chem_sp') . '/js/';
+    
 //    Show the medium sized image of the structure at the top of the view
-//    $content1 = '<img src="http://192.168.200.128:8080/fedora/objects/quantumchem:8272/datastreams/MEDIUM/content" />';
     $content1 = '<img src="' . $base_url . '/fedora/repository/' . $this->pid . '/MEDIUM/MEDIUM.jpg" />';
+    
 //    Load the XML from the CML and DC datastreams
     $item = new Fedora_Item($pid);
     $xmlstr = $item->get_datastream_dissemination("CML");
     $xmlstr2 = $item->get_datastream_dissemination("DC");
+    
 //    If the CML datastream exists then display the relevant information.
 //    It's unlikely that the DC stream will exist if the CML one doesn't
     $title = '';
     if (!$xmlstr == NULL) {
+      
 //      Pull out the elements from the XML
       $xml2 = new SimpleXMLElement($xmlstr2);
       $ns_xml2 = $xml2->children('dc', TRUE);
       $title = $ns_xml2->title;
-//      $contributor = $ns_xml2->contributor;
       $author = $ns_xml2->contributor;
       $xml = new SimpleXMLElement($xmlstr);
       $ns_xml = $xml->children();
@@ -97,6 +99,7 @@ class IslandoraChem {
       $formula = $ns_xml->molecule->formula->attributes()->concise;
       $smiles = $ns_xml->xpath("//alternative[@id='sm1']");
       $inchi = $ns_xml->molecule->identifier->inchi;
+      
       // Loop through each of the inchikeys as there may be multiple in a cluster
       foreach ($ns_xml->molecule->identifier->inchikey as $key) {
         $inchi_key[] = $key;
@@ -141,6 +144,7 @@ class IslandoraChem {
           }
         }
       }
+      
 //      Get the URL to chemspider if it exists and create a link from it
       $spider_url = $ns_xml->molecule->metadata->attributes()->content;
 
@@ -182,7 +186,7 @@ class IslandoraChem {
       $info_icon_url = $base_url . '/' . drupal_get_path('module', 'islandora_chem_sp') . '/images/icon_info.png';
       
       $rows_extra = array(
-        array('Inchi<img src="' . $info_icon_url . '" height="15"/>', $inchi),
+        array("Inchi<img src=$info_icon_url height='15' onclick='return popitup('www.google.com')'/>", $inchi),
         array('Inchikey(s)<img src="' . $info_icon_url . '" height="15"/>', implode(', ', $inchi_key)),
         array('Fragments<img src="' . $info_icon_url . '" height="15"/>', $fragments[0]),
         array('File description<img src="' . $info_icon_url . '" height="15"/>', $desc),
