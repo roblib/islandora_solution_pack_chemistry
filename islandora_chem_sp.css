@@ -56,8 +56,8 @@ pre span.D{ color:#ff9a5d; } /* Defines */
     font-weight: bold;
 }
 
-div.code-window {
-    height: 500px;
-    width: 500px;
+.code-window {
+    height: 100px;
+    width: 100px;
     overflow: auto;
 }
