@@ -34,7 +34,7 @@ class IslandoraChem {
     drupal_add_js("function popitup(url) {
 	newwindow=window.open(url,'name','height=200,width=150');
 	if (window.focus) {newwindow.focus()}
-	return false;}");
+	return false;}", 'inline');
     $pid = $this->pid;
     $object_profile = islandora_chem_sp_object_profile($pid);
     $uid = islandora_chem_sp_get_uid($object_profile['owner']);
