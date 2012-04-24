@@ -11,7 +11,7 @@ function islandora_chem_sp_ingest_form($form_state) {
 
   $form['title'] = array(
     '#type' => 'textfield',
-    '#title' => t('Name'),
+    '#title' => t('Title'),
     '#size' => 25,
   );
 
