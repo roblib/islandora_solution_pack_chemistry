@@ -198,13 +198,13 @@ class IslandoraChem {
       if (!empty($rows2)) {
         $tabset['first_tab']['tabs']['summary']['related'] = array(
           '#value' => '<b>Related entries</b></br>' . theme('table', $header2, $rows2),
-          '#weight' => 2,
+          '#weight' => 1,
         );
       }
       else {
         $tabset['first_tab']['tabs']['summary']['related'] = array(
           '#value' => '<b>Related entries</b></br><p>None found!</p>',
-          '#weight' => 2,
+          '#weight' => 1,
         );
       }
     }
@@ -243,11 +243,12 @@ class IslandoraChem {
       '#title' => t('Extra information'),
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
+      '#weight' => 2,
     );
     
     $tabset['first_tab']['tabs']['summary']['extra']['table2'] = array(
       '#value' => theme('table', $header_extra, $rows_extra),
-      '#weight' => 1,
+      '#weight' => 2,
     );
 
     $tabset['first_tab']['tabs']['view'] = array(
