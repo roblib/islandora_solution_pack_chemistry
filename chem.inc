@@ -256,7 +256,7 @@ JS;
 
     if (!$xmlstr_output3 == NULL) {
 //      $output .= str_replace("\n", '</BR>', file_get_contents($fedora_url . '/objects/' . $this->pid . '/datastreams/OBJ/content'));
-      $output .= str_replace(array("\n", '$$'), array('</BR>', '$ $ '), $xmlstr_output3);
+      $output .= str_replace(array("\n", '$$'), array('</BR>', '**'), $xmlstr_output3);
      $content3 = '<div class="code-window">' . $output . '</div>';
     }
     else {
