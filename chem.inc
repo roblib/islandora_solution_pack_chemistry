@@ -176,7 +176,7 @@ class IslandoraChem {
       $header_extra = array();
 
       $rows_extra = array(
-        array('Inchi', '<b>' . $inchi . '</b>'),
+        array('Inchi', '<abbr title="International Chemical Identifier">' . $inchi . '</abbr>'),
         array('Inchikey(s)', implode(', ', $inchi_key)),
         array('Fragments', $fragments[0]),
         array('File description', $desc),
