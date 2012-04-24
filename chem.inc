@@ -188,15 +188,16 @@ class IslandoraChem {
         array('Fragments', $fragments[0]),
       );
 
-      $content1 .= "</BR><B>Related entries</B></BR>";
       if (!empty($rows2)) {
         $tabset['first_tab']['tabs']['summary']['related'] = array(
+          '#title' => t('Related entries'),
           '#value' => theme('table', $header2, $rows2),
           '#weight' => 2,
         );
       }
       else {
         $tabset['first_tab']['tabs']['summary']['related'] = array(
+          '#title' => t('Related entries'),
           '#value' => '<p>None found!</p>',
           '#weight' => 2,
         );
