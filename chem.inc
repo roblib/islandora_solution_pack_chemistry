@@ -179,9 +179,9 @@ class IslandoraChem {
       
       $rows_extra = array(
         array('Inchi<img src="' . $info_icon_url . '" height="15"/>', $inchi),
-        array('Inchikey(s)', implode(', ', $inchi_key)),
-        array('Fragments', $fragments[0]),
-        array('File description', $desc),
+        array('Inchikey(s)<img src="' . $info_icon_url . '" height="15"/>', implode(', ', $inchi_key)),
+        array('Fragments<img src="' . $info_icon_url . '" height="15"/>', $fragments[0]),
+        array('File description<img src="' . $info_icon_url . '" height="15"/>', $desc),
       );
 
       $tabset['first_tab']['tabs']['summary'] = array(
