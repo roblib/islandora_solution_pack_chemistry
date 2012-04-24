@@ -181,17 +181,17 @@ JS;
     $title = NULL;
     $recordStart = $results->response->start;
     $limitResults = variable_get('islandora_solr_search_limit_result_fields', 0);
-    $highlights = $results->highlighting;
-    foreach ($highlights as $highlight) {
-      $fields = get_object_vars($highlight);
-      $keys = array_keys($fields);
-      if (count($keys) > 0) {
-        foreach ($highlight->$keys[0] as $body) {
-          //drupal_set_message("$keys[0]  $body");
-        }
-      }
-      //drupal_set_message($highlight->$keys[0]);
-    }
+//    $highlights = $results->highlighting;
+//    foreach ($highlights as $highlight) {
+//      $fields = get_object_vars($highlight);
+//      $keys = array_keys($fields);
+//      if (count($keys) > 0) {
+//        foreach ($highlight->$keys[0] as $body) {
+//          //drupal_set_message("$keys[0]  $body");
+//        }
+//      }
+//      //drupal_set_message($highlight->$keys[0]);
+//    }
 
     global $base_url;
     if (empty($results)) {
@@ -220,8 +220,8 @@ JS;
         $row++;
       }
       elseif ($doc->id != NULL) {
-        $tn = '<img src="' . $base_url . '/' . drupal_get_path('module', 'islandora_chem_sp') . '/images/druplicon.png" /></a>';
-        $rows[][] = $tn;
+//        $tn = '<img src="' . $base_url . '/' . drupal_get_path('module', 'islandora_chem_sp') . '/images/druplicon.png" /></a>';
+//        $rows[][] = $tn;
         $row++;
       }
       else {
