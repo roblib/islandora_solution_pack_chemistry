@@ -188,7 +188,7 @@ class IslandoraChem {
         array('Fragments', $fragments[0]),
       );
 
-      $content1 .= theme('table', $header, $rows);
+      $table1 = theme('table', $header, $rows);
       $content1 .= theme('table', $header_extra, $rows_extra);
       $content1 .= "</BR><B>Related entries</B></BR>";
       if (!empty($rows2)) {
@@ -228,6 +228,12 @@ class IslandoraChem {
       '#title' => t('Summary'),
       '#content' => $content1,
       '#weight' => 1,
+    );
+    
+    $tabset['first_tab']['tabs']['summary']['table'] = array(
+      '#theme' => 'table',
+      '#header' => $header,
+      '#rows' => $rows,
     );
 
     $tabset['first_tab']['tabs']['view'] = array(
