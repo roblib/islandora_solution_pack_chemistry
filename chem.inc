@@ -151,14 +151,14 @@ class IslandoraChem {
       else {
         $spider_entry = 'Not found';
       }
-      
+
       if ($contributor == 'Unknown') {
         $contributor_array = array('Contributor', 'Unknown');
       }
       else {
         $contributor_array = array('Contributor', l($contributor, 'user/' . $uid) . ' | ' . l('Search', $base_url . '/islandora/solr/search/' . preg_replace("/\([^\)]+\)/", "", $contributor) . '/-/dismax'));
       }
-      
+
 //      Create a table to display all the data nicely
       $header = array();
       $rows = array(
@@ -179,9 +179,9 @@ class IslandoraChem {
         'Researcher',
 //        'Date created',
       );
-      
+
       $header_extra = array();
-      
+
       $rows_extra = array(
         array('Inchi', $inchi),
         array('Inchikey(s)', implode(', ', $inchi_key)),
@@ -257,7 +257,7 @@ JS;
     if (!$xmlstr_output3 == NULL) {
 //      $output .= str_replace("\n", '</BR>', file_get_contents($fedora_url . '/objects/' . $this->pid . '/datastreams/OBJ/content'));
       $output .= str_replace(array("\n", '$$'), array('</BR>', '**'), $xmlstr_output3);
-     $content3 = '<div class="code-window">' . $output . '</div>';
+      $content3 = $output;
     }
     else {
       $content3 = '<div id="title">No OBJ datastream found</div>';
@@ -266,6 +266,8 @@ JS;
     $tabset['first_tab']['tabs']['output'] = array(
       '#type' => 'tabpage',
       '#title' => t('Output file'),
+      '#prefix' => '<div class="code-window">',
+      '#suffix' => '</div>',
       '#content' => $content3,
       '#weight' => 3,
     );
