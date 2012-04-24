@@ -175,8 +175,10 @@ class IslandoraChem {
 
       $header_extra = array();
 
+      $info_icon_url = $base_url . '/' . drupal_get_path('module', 'islandora_chem_sp') . '/images/icon_info.png';
+      
       $rows_extra = array(
-        array('Inchi<img src="' . $base_url . '/' . drupal_get_path('module', 'islandora_chem_sp') . '/images/icon_info.png" height="15"/>', $inchi),
+        array('Inchi<img src="' . $info_icon_url . '" height="15"/>', $inchi),
         array('Inchikey(s)', implode(', ', $inchi_key)),
         array('Fragments', $fragments[0]),
         array('File description', $desc),
