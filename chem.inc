@@ -76,10 +76,6 @@ class IslandoraChem {
     $item = new Fedora_Item($pid);
     $xmlstr = $item->get_datastream_dissemination("CML");
     $xmlstr2 = $item->get_datastream_dissemination("DC");
-//    $collectionHelper = new CollectionClass();
-//    $xmlstr = $collectionHelper->getStream($this->pid, "CML");
-//    $collectionHelper2 = new CollectionClass();
-//    $xmlstr2 = $collectionHelper2->getStream($this->pid, "DC");
 //    If the CML datastream exists then display the relevant information.
 //    It's unlikely that the DC stream will exist if the CML one doesn't
     $title = '';
@@ -141,7 +137,6 @@ class IslandoraChem {
           }
         }
       }
-//      var_dump($rows2);
 //      Get the URL to chemspider if it exists and create a link from it
       $spider_url = $ns_xml->molecule->metadata->attributes()->content;
 
@@ -164,7 +159,6 @@ class IslandoraChem {
       $rows = array(
         array('Title', $title),
         $contributor_array,
-//        array('Author(s)', $author),
         array('IUPAC name', $iupac),
         array('Synonyms', html_entity_decode($synonym[0])),
         array('Molecular weight', $mw2),
@@ -182,7 +176,7 @@ class IslandoraChem {
       $header_extra = array();
 
       $rows_extra = array(
-        array('Inchi', $inchi),
+        array('Inchi', '<b>' . $inchi . '</b>'),
         array('Inchikey(s)', implode(', ', $inchi_key)),
         array('Fragments', $fragments[0]),
         array('File description', $desc),
