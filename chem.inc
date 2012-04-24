@@ -238,7 +238,14 @@ class IslandoraChem {
       '#weight' => 0,
     );
 
-    $tabset['first_tab']['tabs']['summary']['table2'] = array(
+    $tabset['first_tab']['tabs']['summary']['extra'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Extra information'),
+      '#collapsible' => TRUE,
+      '#collapsed' => TRUE,
+    );
+    
+    $tabset['first_tab']['tabs']['summary']['extra']['table2'] = array(
       '#value' => theme('table', $header_extra, $rows_extra),
       '#weight' => 1,
     );
