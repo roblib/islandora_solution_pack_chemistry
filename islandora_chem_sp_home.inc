@@ -4,19 +4,7 @@
  * @file
  */
 
-/**
- * Form to display content on the user's home page
- * @global type $user
- * @param type $form_state
- * @return type 
- */
-function islandora_chem_sp_user_login_form(&$form_state) {
-  global $user;
-  $form = array();
-
-  $form['welcome'] = array(
-    '#value' => t('Welcome @user', array('@user' => $user->name)),
-  );
+function islandora_chem_sp_group_form(&$form_state) {
 
   $form['first_tab'] = array(
     '#type' => 'tabpage',
@@ -26,221 +14,34 @@ function islandora_chem_sp_user_login_form(&$form_state) {
     '#type' => 'tabset',
   );
 
-  $form['first_tab']['tabs']['files'] = array(
-    '#type' => 'tabpage',
-    '#title' => t('Files'),
-  );
-
-  $form['first_tab']['tabs']['files']['content'] = array(
-    '#value' => drupal_get_form('islandora_chem_sp_object_form'),
-  );
-
-  $form['first_tab']['tabs']['files']['save'] = array(
-    '#type' => 'submit',
-    '#value' => t('Save changes'),
-    '#name' => 'save_permissions',
-  );
-
-  $form['first_tab']['tabs']['conversations'] = array(
-    '#type' => 'tabpage',
-    '#title' => t('Conversations'),
-  );
-
-  $form['first_tab']['tabs']['conversations']['tabs'] = array(
-    '#type' => 'tabset',
-  );
-
-  $form['first_tab']['tabs']['conversations']['tabs']['new_groups'] = array(
+  $form['first_tab']['tabs']['new_groups'] = array(
     '#type' => 'tabpage',
     '#title' => t('Group content')
   );
 
-  $form['first_tab']['tabs']['conversations']['tabs']['new_groups']['content'] = array(
+  $form['first_tab']['tabs']['new_groups']['content'] = array(
     '#value' => views_embed_view('og_mytracker'),
   );
 
-  $form['first_tab']['tabs']['conversations']['tabs']['unread_groups'] = array(
+  $form['first_tab']['tabs']['unread_groups'] = array(
     '#type' => 'tabpage',
     '#title' => t('Unread group content')
   );
 
-  $form['first_tab']['tabs']['conversations']['tabs']['unread_groups']['content'] = array(
+  $form['first_tab']['tabs']['unread_groups']['content'] = array(
     '#value' => views_embed_view('og_unread'),
   );
 
-  $form['first_tab']['tabs']['conversations']['tabs']['new_content'] = array(
+  $form['first_tab']['tabs']['new_content'] = array(
     '#type' => 'tabpage',
     '#title' => t('Recent site content')
   );
 
-  $form['first_tab']['tabs']['conversations']['tabs']['new_content']['content'] = array(
+  $form['first_tab']['tabs']['new_content']['content'] = array(
     '#value' => views_embed_view('og_tracker'),
   );
 
-  $form['first_tab']['tabs']['people'] = array(
-    '#type' => 'tabpage',
-    '#title' => t('People')
-  );
-
-  $form['first_tab']['tabs']['people']['content'] = array(
-    '#value' => drupal_get_form('islandora_chem_sp_people_form'),
-  );
-
-  $form['first_tab']['tabs']['search'] = array(
-    '#type' => 'tabpage',
-    '#title' => t('Search')
-  );
-
-  $form['first_tab']['tabs']['search']['simple_search'] = array(
-    '#type' => 'textfield',
-    '#prefix' => '<div class="mw_range_submit">',
-    '#suffix' => '</div>',
-  );
-
-  $form['first_tab']['tabs']['search']['submit'] = array(
-    '#type' => 'submit',
-    '#value' => t('Search'),
-    '#name' => 'simple_submit',
-    '#prefix' => '<div class="mw_range_submit">',
-    '#suffix' => '</div>',
-  );
-
   return $form;
-}
-
-/**
- * Submit function for home page form
- * Checks which submit button was clicked and acts appropriately
- * @todo When the return key is pressed work out which button the user wanted to click
- * from elements that the user had filled in
- * @global type $user
- * @param type $form
- * @param type $form_state 
- */
-function islandora_chem_sp_user_login_form_submit($form, &$form_state) {
-  module_load_include('inc', 'islandora_chem_sp', 'islandora_chem_sp_search');
-  module_load_include('module', 'islandora_xacml_editor', 'islandora_xacml_editor');
-  module_load_include('inc', 'islandora_xacml_editor', 'api/Xacml');
-
-  global $user;
-  $dsid = 'POLICY';
-  $permissions = array();
-
-  $pid_list = explode(' ', $form_state['clicked_button']['#post']['pids']);
-  $open_read_pids = explode(' ', $form_state['clicked_button']['#post']['open_read_pids']);
-  $open_write_pids = explode(' ', $form_state['clicked_button']['#post']['open_write_pids']);
-
-//  krumo($open_read_pids);
-//  krumo($open_write_pids);
-  if ($form_state['clicked_button']['#name'] == 'simple_submit') {
-    islandora_chem_sp_simple_search_form_submit($form, $form_state);
-  }
-
-  if ($form_state['clicked_button']['#name'] == 'save_permissions') {
-    foreach ($form_state['clicked_button']['#post'] as $key => $value) {
-      if (strstr($key, 'chem')) {
-        $tasks = explode('__', $key);
-        $permissions[$tasks[1]][$tasks[0]] = $value;
-      }
-    }
-  }
-//  krumo($form_state);
-  foreach ($pid_list as $pid) {
-    $read_open = TRUE;
-    $write_open = TRUE;
-    $xacml = new Xacml();
-    $object = new Fedora_Item($pid);
-    $datastreams = $object->get_datastreams_list_as_array();
-//    drupal_set_message('PID: ' . $pid);
-
-    foreach ($permissions[$pid] as $key => $pid_permission) {
-//      drupal_set_message('Pid permission: ' . $key . ' - ' . $pid_permission);
-
-      if ($key == 'chem_user_read' && $pid_permission == 1) {
-//        drupal_set_message('Chem user read');
-        $xacml->viewingRule->addUser($user->name);
-        $read_open = FALSE;
-      }
-
-      if ($key == 'chem_user_write' && $pid_permission == 1) {
-//        drupal_set_message('Chem user write');
-        $xacml->managementRule->addUser($user->name);
-        $write_open = FALSE;
-      }
-
-      if (stristr($key, 'chem_group') != FALSE) {
-        $key_array = explode('-', $key);
-//        drupal_set_message('Group id: ' . $key_array[1]);
-//        drupal_set_message('Level: ' . $key_array[2]);
-        $query = db_query("SELECT title FROM {node} WHERE nid = '%d'", $key_array[1]);
-        $result = db_fetch_object($query);
-        $role = $result->title;
-        if ($key_array[2] == 'read') {
-//          drupal_set_message('Adding viewing role ' . $role);
-          $xacml->viewingRule->addRole($role);
-          $read_open = FALSE;
-        }
-        if ($key_array[2] == 'write') {
-//          drupal_set_message('Adding management role ' . $role);
-          $xacml->viewingRule->addRole($role);
-          $xacml->managementRule->addRole($role);
-          $write_open = FALSE;
-        }
-      }
-    }
-//    drupal_set_message('Open read pids: ' . implode(', ', $open_read_pids));
-//    drupal_set_message('In read: ' . (string) in_array($pid, $open_read_pids));
-
-    if ($key == 'chem_all_read' && $pid_permission == 1) {
-      if ($read_open == TRUE || !in_array($pid, $open_read_pids)) {
-//        drupal_set_message('Chem all read');
-        $read_roles = $xacml->viewingRule->getRoles();
-        foreach ($read_roles as $read_role) {
-          $xacml->viewingRule->removeRole($read_role);
-        }
-        $read_users = $xacml->viewingRule->getUsers();
-        foreach ($read_users as $read_user) {
-          $xacml->viewingRule->removeUser($read_user);
-        }
-      }
-    }
-
-    if ($key == 'chem_all_write' && $pid_permission == 1) {
-      if ($write_open == TRUE || !in_array($pid, $open_write_pids)) {
-//        drupal_set_message('Chem all write');
-        $write_roles = $xacml->managementRule->getRoles();
-        foreach ($write_roles as $write_role) {
-          $xacml->managementRule->removeRole($write_role);
-        }
-        $write_users = $xacml->managementRule->getUsers();
-        foreach ($write_users as $write_user) {
-          $xacml->managementRule->removeUser($write_user);
-        }
-      }
-    }
-
-
-    $xml = $xacml->getXmlString();
-//    krumo($xml);
-    if ($xml != NULL) {
-
-//      krumo($xml);
-
-      if (array_key_exists($dsid, $datastreams)) {
-        $object->modify_datastream_by_value($xml, $dsid, 'Xacml Policy Stream', 'text/xml');
-      }
-      else {
-        $object->add_datastream_from_string($xml, $dsid, 'Xacml Policy Stream', 'text/xml', 'X');
-      }
-    }
-    else {
-      $result = $object->purge_datastream($dsid);
-      if ($result) {
-        drupal_set_message(t('Security policy removed from @pid', array('@pid' => $pid)));
-      }
-    }
-//    drupal_set_message('XACML: ' . $xml);
-  }
 }
 
 /**
@@ -271,7 +72,7 @@ function islandora_chem_sp_object_form(&$form_state) {
 
   $calculations_list = array();
   $solr_url = variable_get('islandora_solr_search_block_url', 'localhost:8080/solr');
-  $solr_query = 'http://' . $solr_url . '/select?q=fgs.ownerId:"' . urlencode($username) . '"%20AND%20rel.hasModel:info\:fedora/quantumchem-sys\:sp_chem_CM&fl=PID,dc.title,cml.name&qt=standard&start=' . $offset . '&rows=' . $items_per_page;
+  $solr_query = 'http://' . $solr_url . '/select?q=fgs.ownerId:"' . urlencode($username) . '"%20AND%20rel.hasModel:sp_chem_CM&fl=PID,dc.title,cml.name&qt=standard&start=' . $offset . '&rows=' . $items_per_page;
   $solr_result = @file_get_contents($solr_query);
   if ($solr_result != NULL) {
     $calc_search = new SimpleXMLElement($solr_result);
@@ -458,7 +259,142 @@ function islandora_chem_sp_object_form(&$form_state) {
     '#value' => implode(' ', $open_write_pids),
   );
 
+  $form['save'] = array(
+    '#type' => 'submit',
+    '#prefix' => '<div>',
+    '#suffix' => '</div>',
+    '#value' => t('Save changes'),
+    '#name' => 'save_permissions',
+  );
+
   return $form;
+}
+
+/**
+ * Submit function for home page form
+ * Checks which submit button was clicked and acts appropriately
+ * @todo When the return key i  s pressed work out which button the user wanted to click
+ * from elements that the user had filled in
+ * @global type $user
+ * @param type $form
+ * @param type $form_state 
+ */
+function islandora_chem_sp_object_form_submit($form, &$form_state) {
+  module_load_include('inc', 'islandora_chem_sp', 'islandora_chem_sp_search');
+  module_load_include('module', 'islandora_xacml_editor', 'islandora_xacml_editor');
+  module_load_include('inc', 'islandora_xacml_editor', 'api/Xacml');
+
+  global $user;
+  $dsid = 'POLICY';
+  $permissions = array();
+
+  $pid_list = explode(' ', $form_state['clicked_button']['#post']['pids']);
+  $open_read_pids = explode(' ', $form_state['clicked_button']['#post']['open_read_pids']);
+  $open_write_pids = explode(' ', $form_state['clicked_button']['#post']['open_write_pids']);
+  drupal_set_message('Button: ' . $form_state['clicked_button']['#name']);
+
+  if ($form_state['clicked_button']['#name'] == 'save_permissions') {
+    foreach ($form_state['clicked_button']['#post'] as $key => $value) {
+      if (strstr($key, 'chem')) {
+        $tasks = explode('__', $key);
+        $permissions[$tasks[1]][$tasks[0]] = $value;
+      }
+    }
+  }
+//  krumo($form_state);
+  foreach ($pid_list as $pid) {
+    $read_open = TRUE;
+    $write_open = TRUE;
+    $xacml = new Xacml();
+    $object = new Fedora_Item($pid);
+    $datastreams = $object->get_datastreams_list_as_array();
+//    drupal_set_message('PID: ' . $pid);
+
+    foreach ($permissions[$pid] as $key => $pid_permission) {
+//      drupal_set_message('Pid permission: ' . $key . ' - ' . $pid_permission);
+
+      if ($key == 'chem_user_read' && $pid_permission == 1) {
+//        drupal_set_message('Chem user read');
+        $xacml->viewingRule->addUser($user->name);
+        $read_open = FALSE;
+      }
+
+      if ($key == 'chem_user_write' && $pid_permission == 1) {
+//        drupal_set_message('Chem user write');
+        $xacml->managementRule->addUser($user->name);
+        $write_open = FALSE;
+      }
+
+      if (stristr($key, 'chem_group') != FALSE) {
+        $key_array = explode('-', $key);
+//        drupal_set_message('Group id: ' . $key_array[1]);
+//        drupal_set_message('Level: ' . $key_array[2]);
+        $query = db_query("SELECT title FROM {node} WHERE nid = '%d'", $key_array[1]);
+        $result = db_fetch_object($query);
+        $role = $result->title;
+        if ($key_array[2] == 'read') {
+//          drupal_set_message('Adding viewing role ' . $role);
+          $xacml->viewingRule->addRole($role);
+          $read_open = FALSE;
+        }
+        if ($key_array[2] == 'write') {
+//          drupal_set_message('Adding management role ' . $role);
+          $xacml->viewingRule->addRole($role);
+          $xacml->managementRule->addRole($role);
+          $write_open = FALSE;
+        }
+      }
+    }
+//    drupal_set_message('Open read pids: ' . implode(', ', $open_read_pids));
+//    drupal_set_message('In read: ' . (string) in_array($pid, $open_read_pids));
+
+    if ($key == 'chem_all_read' && $pid_permission == 1) {
+      if ($read_open == TRUE || !in_array($pid, $open_read_pids)) {
+//        drupal_set_message('Chem all read');
+        $read_roles = $xacml->viewingRule->getRoles();
+        foreach ($read_roles as $read_role) {
+          $xacml->viewingRule->removeRole($read_role);
+        }
+        $read_users = $xacml->viewingRule->getUsers();
+        foreach ($read_users as $read_user) {
+          $xacml->viewingRule->removeUser($read_user);
+        }
+      }
+    }
+
+    if ($key == 'chem_all_write' && $pid_permission == 1) {
+      if ($write_open == TRUE || !in_array($pid, $open_write_pids)) {
+//        drupal_set_message('Chem all write');
+        $write_roles = $xacml->managementRule->getRoles();
+        foreach ($write_roles as $write_role) {
+          $xacml->managementRule->removeRole($write_role);
+        }
+        $write_users = $xacml->managementRule->getUsers();
+        foreach ($write_users as $write_user) {
+          $xacml->managementRule->removeUser($write_user);
+        }
+      }
+    }
+
+    $xml = $xacml->getXmlString();
+
+    if ($xml != NULL) {
+
+      if (array_key_exists($dsid, $datastreams)) {
+        $object->modify_datastream_by_value($xml, $dsid, 'Xacml Policy Stream', 'text/xml');
+      }
+      else {
+        $object->add_datastream_from_string($xml, $dsid, 'Xacml Policy Stream', 'text/xml', 'X');
+      }
+    }
+    else {
+      $result = $object->purge_datastream($dsid);
+      if ($result) {
+        drupal_set_message(t('Security policy removed from @pid', array('@pid' => $pid)));
+      }
+    }
+//    drupal_set_message('XACML: ' . $xml);
+  }
 }
 
 /**

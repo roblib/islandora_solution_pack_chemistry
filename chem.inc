@@ -40,7 +40,7 @@ class IslandoraChem {
     $uid = islandora_chem_sp_get_uid($object_profile['owner']);
     $object_user = user_load($uid);
     $contributor = $object_user->profile_firstname . ' ' . $object_user->profile_lastname;
-    if ($contributor == NULL) {
+    if ($contributor == NULL || $contributor == ' ') {
       if ($object_profile['owner'] != NULL) {
         $contributor = $object_profile['owner'];
       }
@@ -221,10 +221,7 @@ class IslandoraChem {
     drupal_add_js($pathTojs . 'ChemDoodleWeb/install/ChemDoodleWeb.js');
 
 //    Grab the structure file and clean it up so that it displays in the JS viewer
-//    $file = trim(file_get_contents($fedora_url . '/objects/' . $this->pid . '/datastreams/MOL/content'));
     $file = trim($item->get_datastream_dissemination("MOL"));
-//    $collectionHelper_mol = new CollectionClass();
-//    $file = trim($collectionHelper_mol->getStream($this->pid, "MOL"));
     $file = mol_clean($file);
 
 //    Put in the JS for the viewer and load the MOL file
@@ -263,8 +260,7 @@ class IslandoraChem {
     );
 //    Display the raw output file as text if it exists
     $xmlstr_output3 = $item->get_datastream_dissemination("OBJ");
-//    $collectionHelper_output3 = new CollectionClass();
-//    $xmlstr_output3 = $collectionHelper_output3->getStream($this->pid, "OBJ");
+
 
     $output = '';
 
@@ -298,8 +294,6 @@ JS;
     );
 //    Display the raw input file as text if it exists
     $xmlstr_input = $item->get_datastream_dissemination("INPUT");
-//    $collectionHelper_input = new CollectionClass();
-//    $xmlstr_input = $collectionHelper_input->getStream($this->pid, "INPUT");
 
     if (!$xmlstr_input == NULL) {
       $content4 = str_replace("\n", '</BR>', $xmlstr_input);
@@ -313,8 +307,6 @@ JS;
     }
 //    Display the raw code as text if it exists
     $xmlstr_code = $item->get_datastream_dissemination("CODE");
-//    $collectionHelper_code = new CollectionClass();
-//    $xmlstr_code = $collectionHelper_code->getStream($this->pid, "CODE");
 
     if (!$xmlstr_code == NULL) {
       module_load_include('php', 'geshifilter', '/geshi/geshi');

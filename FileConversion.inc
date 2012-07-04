@@ -15,7 +15,7 @@ function clean_XYZ($file) {
   $ext = strrchr($file, '.');
   $base = preg_replace("/$ext$/", '', $file);
   $ext = substr($ext, 1);
-  drupal_set_message('Extension is: ' . $ext);
+//  drupal_set_message('Extension is: ' . $ext);
   if ($ext == 'xyz') {
     $xyz = file($file);
 //    drupal_set_message('First character is: ' . $xyz[0][0]);

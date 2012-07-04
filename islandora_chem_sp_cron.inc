@@ -79,7 +79,7 @@ function islandora_chem_cron() {
         $file_list = array_chunk($file_list, 5, TRUE);
 //        drupal_set_message('File list: ' . implode(', ', $file_list[0]));
         foreach ($file_list[0] as $label => $object_files) {
-          create_batch_objects($label, 'quantumchem-sys:sp_chem_CM', $object_files, 'quantumchem-sys:sp_chem_calculations', 'quantumchem', '');
+          create_batch_objects($label, 'islandora:sp_chem_CM', $object_files, 'quantumchem:sp_chem_calculations', 'quantumchem', '');
           $delete_ext = strrchr(array_shift(array_values($object_files)), '.');
           $delete_base = preg_replace("/$delete_ext$/", '', array_shift(array_values($object_files)));
           $mask = $delete_base . '.*';

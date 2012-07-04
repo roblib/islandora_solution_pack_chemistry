@@ -31,7 +31,7 @@ function islandora_chem_sp_install() {
   $result = db_result(db_query('Select content_model from {islandora_content_model_forms} where  content_model = "%s" and form_name = "%s"', 'quantumchem:sp_chem_CM', 'Islandora Chem MODS Form'));
   if (!$result) {
     $object = new stdClass();
-    $object->content_model = 'quantumchem-sys:sp_chem_CM';
+    $object->content_model = 'islandora:sp_chem_CM';
     $object->form_name = 'Islandora Chem MODS Form';
     $object->dsid = 'MODS';
     $object->title_field = "['titleInfo']['title']";
@@ -42,7 +42,7 @@ function islandora_chem_sp_install() {
   $result = db_result(db_query('Select content_model from {islandora_content_model_forms} where  content_model = "%s" and form_name = "%s"', 'quantumchem:sp_chem_researcher_CM', 'Islandora Chem MADS Form'));
   if (!$result) {
     $object = new stdClass();
-    $object->content_model = 'quantumchem-sys:sp_chem_researcher_CM';
+    $object->content_model = 'islandora:sp_chem_researcher_CM';
     $object->form_name = 'Islandora Chem MADS Form';
     $object->dsid = 'MADS';
     $object->title_field = "['titleInfo']['title']";
@@ -104,13 +104,13 @@ function islandora_chem_sp_uninstall() {
   if (XMLFormDatabase::Exists(ISLANDORA_CHEM_SP_MODS_FORM_NAME)) {
     XMLFormDatabase::Delete(ISLANDORA_CHEM_SP_MODS_FORM_NAME);
   }
-  $result = db_result(db_query('Select content_model from {islandora_content_model_forms} where content_model = "%s" and form_name = "%s"', 'quantumchem-sys:sp_chem_CM', 'Islandora Chem MODS Form'));
+  $result = db_result(db_query('Select content_model from {islandora_content_model_forms} where content_model = "%s" and form_name = "%s"', 'islandora:sp_chem_CM', 'Islandora Chem MODS Form'));
   if ($result) {
-    db_query('DELETE FROM {islandora_content_model_forms} WHERE content_model = "%s" and form_name = "%s"', 'quantumchem-sys:sp_chem_CM', 'Islandora Chem MODS Form');
+    db_query('DELETE FROM {islandora_content_model_forms} WHERE content_model = "%s" and form_name = "%s"', 'islandora:sp_chem_CM', 'Islandora Chem MODS Form');
   }
   
-  $result = db_result(db_query('Select content_model from {islandora_content_model_forms} where content_model = "%s" and form_name = "%s"', 'quantumchem-sys:sp_chem_researcher_CM', 'Islandora Chem MADS Form'));
+  $result = db_result(db_query('Select content_model from {islandora_content_model_forms} where content_model = "%s" and form_name = "%s"', 'islandora:sp_chem_researcher_CM', 'Islandora Chem MADS Form'));
   if ($result) {
-    db_query('DELETE FROM {islandora_content_model_forms} WHERE content_model = "%s" and form_name = "%s"', 'quantumchem-sys:sp_chem_researcher_CM', 'Islandora Chem MADS Form');
+    db_query('DELETE FROM {islandora_content_model_forms} WHERE content_model = "%s" and form_name = "%s"', 'islandora:sp_chem_researcher_CM', 'Islandora Chem MADS Form');
   }
 }

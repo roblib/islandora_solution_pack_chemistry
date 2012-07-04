@@ -9,12 +9,6 @@ function islandora_chem_sp_ingest_form($form_state) {
 
   $form['#attributes'] = array('enctype' => "multipart/form-data");
 
-  $form['title'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Title'),
-    '#size' => 25,
-  );
-
   $form['upload'] = array(
     '#type' => 'file',
     '#title' => t('Upload structure file'),
@@ -22,7 +16,8 @@ function islandora_chem_sp_ingest_form($form_state) {
 
   $form['structure_submit'] = array(
     '#type' => 'submit',
-    '#value' => t('Submit'),
+    '#value' => t('Upload'),
+    '#name' => 'ingest_submit',
   );
 
   return $form;
@@ -55,11 +50,11 @@ function islandora_chem_sp_ingest_form_submit($form, &$form_state) {
   module_load_include('inc', 'fedora_repository', 'CollectionPolicy');
   module_load_include('inc', 'islandora_chem_sp', 'chem');
   module_load_include('inc', 'fedora_repository', 'api/fedora_item');
+  module_load_include('inc', 'islandora_chem_sp', 'includes/islandora_chem_sp_batch');
 
   global $user;
-  
+
   $file = $form_state['values']['file'];
-  $title = $form_state['values']['title'];
   $contents = file_get_contents($file->filepath);
 
   $ext = strrchr($file->filename, '.');
@@ -84,16 +79,21 @@ function islandora_chem_sp_ingest_form_submit($form, &$form_state) {
     'dx',
     'mop',
     'in',
+    'zip',
   );
-  
+
   if (!in_array($ext, $allowed_extensions) && $ext != NULL) {
     drupal_set_message(t('The file you uploaded is not an allowed type!'), 'warning');
     return;
   }
-  
+
+  if ($ext == 'zip') {
+    islandora_chem_sp_batch_ingest($file->filepath);
+    return;
+  }
+
   if ($ext == NULL) {
     $start = substr($contents, 0, 20);
-    drupal_set_message('Start: ' . $start);
     switch ($start) {
       case 'MacSPARTAN \'08 MECHA':
         drupal_set_message(t('This is a MacSpartan output file'));
@@ -110,17 +110,24 @@ function islandora_chem_sp_ingest_form_submit($form, &$form_state) {
   else {
     $file_name = $file->filepath;
   }
+  
+  islandora_chem_sp_simple_ingest($file_name);
 
+  $form_state['redirect'] = $base_url . "/fedora/repository/{$collection_pid}";
+}
+
+function islandora_chem_sp_simple_ingest($file_name) {
   $file_name_array = array();
-  $file_name_array['OBJ'] = $file->filepath;
+  $file_name_array['OBJ'] = $file_name;
+  
+  $title =  basename($file_name);
 
   $transform = drupal_get_path('module', 'islandora_content_model_forms') . "/transforms/mods_to_dc.xsl";
-  $content_model_pid = 'quantumchem-sys:sp_chem_CM';
-  $collection_pid = 'quantumchem-sys:sp_chem_calculations';
+  $content_model_pid = 'islandora:sp_chem_CM';
+  $collection_pid = 'quantumchem:sp_chem_calculations';
   $dsid = 'MODS';
   $pid = Fedora_Item::get_next_PID_in_namespace('quantumchem');
   $username = $user->name;
-  drupal_set_message('PID: ' . $pid);
   $xml = "<mods xmlns=\"http://www.loc.gov/mods/v3\">
   <titleInfo>
     <title>$title</title>
@@ -132,13 +139,12 @@ function islandora_chem_sp_ingest_form_submit($form, &$form_state) {
     </role>
   </name>
 </mods>";
-    
+
   $document = new DOMDocument();
   $document->loadXML($xml);
   $document2 = $document->saveXML();
   $document3 = new DOMDocument();
   $document3->loadXML($document2);
-  drupal_set_message('MODS: ' . $document3->saveXML());
 
   $collection_policy = CollectionPolicy::loadFromCollection($collection_pid);
   if ($collection_policy !== FALSE) {
@@ -169,15 +175,11 @@ function islandora_chem_sp_ingest_form_submit($form, &$form_state) {
     drupal_set_message(t('Creating an image of this file failed!'), 'error');
     return;
   }
-  
+
   $file_name_array['MEDIUM'] = $_SESSION['fedora_ingest_files']['MEDIUM'];
   $object = new FOXML($title, $pid, $dsid, $content_model_pid, $collection_pid, $relationship, $file_name_array, $document3, $transform);
   $submit = $object->ingest();
   if (!$submit) {
     drupal_set_message(t('An error occurred when saving the file!'), 'error');
   }
-//  drupal_set_message('Transform: ' . file_get_contents($transform));
-//  drupal_set_message('Start: ' . $start);
-//  drupal_set_message(t('Uploaded file: @file', array('@file' => $file->filepath)));
-  $form_state['redirect'] = $base_url . "/fedora/repository/{$collection_pid}";
 }
