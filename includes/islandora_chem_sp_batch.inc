@@ -35,7 +35,6 @@ function islandora_chem_sp_batch_ingest($file) {
   $it = new RecursiveDirectoryIterator(absolute_path_to_drupal() . '/' . $tmp_dir);
   $file_array = array();
   foreach (new RecursiveIteratorIterator($it) as $file) {
-    drupal_set_message('File: ' . basename($file));
     if (!in_array(basename($file), array('.', '..', '.DS_Store'))) {
       $file_array[] = (string) $file;
     }
@@ -43,7 +42,9 @@ function islandora_chem_sp_batch_ingest($file) {
   foreach ($file_array as $file) {
     $batch['operations'][] = array('islandora_chem_sp_batch_process', array($file));
   }
+  $batch['operations'][] = array('islandora_chem_sp_recursive_directory_delete', array($tmp_dir));
   batch_set($batch);
+  
 }
 
 function islandora_chem_sp_batch_process($file, &$context) {
@@ -56,10 +57,26 @@ function islandora_chem_sp_batch_process($file, &$context) {
   $title = basename($file);
 
   $context['message'] = t('Ingesting file ' . $title);
+  $context['results'][] = $title;
 
   $file_name = strstr($file, 'sites/');
 
   islandora_chem_sp_simple_ingest($file_name);
+}
+
+function islandora_chem_sp_batch_finished($success, $results, $operations) {
+if ($success) {
+    // Here we could do something meaningful with the results.
+    // We just display the number of nodes we processed...
+    $message = count($results) . ' objects processed.';
+  }
+  else {
+    // An error occurred.
+    // $operations contains the operations that remained unprocessed.
+    $error_operation = reset($operations);
+    $message = 'An error occurred while processing ' . $error_operation[0] . ' with arguments :' . print_r($error_operation[0], TRUE);
+  }
+  drupal_set_message($message);
 }
 
 /**
