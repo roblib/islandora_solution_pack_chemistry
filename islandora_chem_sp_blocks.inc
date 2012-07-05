@@ -4,14 +4,18 @@
  * @file
  */
 function islandora_chem_sp_ingest_form($form_state) {
-
+  
   $form = array();
 
   $form['#attributes'] = array('enctype' => "multipart/form-data");
-
+  
+  $form['formats'] = array(
+    '#value' => l(t('Supported formats'), 'formats'),
+    '#suffix' => '<br/>',
+  );
+  
   $form['upload'] = array(
     '#type' => 'file',
-    '#title' => t('Upload structure file'),
   );
 
   $form['structure_submit'] = array(
@@ -116,7 +120,7 @@ function islandora_chem_sp_ingest_form_submit($form, &$form_state) {
   $form_state['redirect'] = $base_url . "/fedora/repository/{$collection_pid}";
 }
 
-function islandora_chem_sp_simple_ingest($file_name) {
+function islandora_chem_sp_simple_ingest($file_name, $separate = TRUE) {
   $file_name_array = array();
   $file_name_array['OBJ'] = $file_name;
   
@@ -154,25 +158,26 @@ function islandora_chem_sp_simple_ingest($file_name) {
   $ingest = new IslandoraChem($pid);
   $mol = $ingest->chem2mol(NULL, 'MOL', $file_name, 'mol');
   if ($mol != 1) {
-    drupal_set_message(t('Creating an archival version of this file failed!'), 'error');
+    drupal_set_message(t("Creating an archival version of $file_name failed!"), 'error');
     return;
   }
   $file_name_array['MOL'] = $_SESSION['fedora_ingest_files']['MOL'];
-  $cml = $ingest->chem2cml(NULL, 'CML', $file_name, 'xml');
+  $cml = $ingest->chem2cml(NULL, 'CML', $file_name, 'xml', $separate);
   if ($cml != 1) {
-    drupal_set_message(t('Extracting metadata from this file failed!'), 'error');
+    drupal_set_message(t("Extracting metadata from $file_name failed!"), 'error');
     return;
   }
   $file_name_array['CML'] = $_SESSION['fedora_ingest_files']['CML'];
+  
   $jpg = $ingest->chem2jpg(array('width' => '100', 'height' => '100'), 'TN', $file_name, 'jpg');
   if ($jpg != 1) {
-    drupal_set_message(t('Creating the thumbnail for this file failed!'), 'error');
+    drupal_set_message(t("Creating the thumbnail for $file_name failed!"), 'error');
     return;
   }
   $file_name_array['TN'] = $_SESSION['fedora_ingest_files']['TN'];
   $medium = $ingest->chem2jpg(array('width' => '250', 'height' => '250'), 'MEDIUM', $file_name, 'jpg');
   if ($medium != 1) {
-    drupal_set_message(t('Creating an image of this file failed!'), 'error');
+    drupal_set_message(t("Creating an image of $file_name failed!"), 'error');
     return;
   }
 
@@ -180,6 +185,6 @@ function islandora_chem_sp_simple_ingest($file_name) {
   $object = new FOXML($title, $pid, $dsid, $content_model_pid, $collection_pid, $relationship, $file_name_array, $document3, $transform);
   $submit = $object->ingest();
   if (!$submit) {
-    drupal_set_message(t('An error occurred when saving the file!'), 'error');
+    drupal_set_message(t("An error occurred when saving the file!"), 'error');
   }
 }

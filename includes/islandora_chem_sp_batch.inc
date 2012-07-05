@@ -42,9 +42,8 @@ function islandora_chem_sp_batch_ingest($file) {
   foreach ($file_array as $file) {
     $batch['operations'][] = array('islandora_chem_sp_batch_process', array($file));
   }
-  $batch['operations'][] = array('islandora_chem_sp_recursive_directory_delete', array($tmp_dir));
+//  $batch['operations'][] = array('islandora_chem_sp_recursive_directory_delete', array($tmp_dir));
   batch_set($batch);
-  
 }
 
 function islandora_chem_sp_batch_process($file, &$context) {
@@ -61,11 +60,43 @@ function islandora_chem_sp_batch_process($file, &$context) {
 
   $file_name = strstr($file, 'sites/');
 
-  islandora_chem_sp_simple_ingest($file_name);
+  $file_info = pathinfo($file);
+
+  $allowed_extensions = array(
+    'mol',
+    'xyz',
+    'pdb',
+    'cdx',
+    'c3d',
+    'chm',
+    'cif',
+    'cml',
+    'inp',
+    'gam',
+    'out',
+    'cub',
+    'gau',
+    'gal',
+    'jdx',
+    'dx',
+    'mop',
+    'in',
+    'zip',
+  );
+  
+  $blocked_filenames = array(
+    'input.xyz',  
+  );
+  
+  $separate = !in_array($title, array('input.inp'));
+  
+  if (in_array($file_info['extension'], $allowed_extensions) && !in_array($title, $blocked_filenames)) {
+    islandora_chem_sp_simple_ingest($file_name, $separate);
+  }
 }
 
 function islandora_chem_sp_batch_finished($success, $results, $operations) {
-if ($success) {
+  if ($success) {
     // Here we could do something meaningful with the results.
     // We just display the number of nodes we processed...
     $message = count($results) . ' objects processed.';

@@ -310,7 +310,7 @@ function islandora_chem_sp_block($op = 'list', $delta = 0, $edit = array()) {
       }
       elseif ($delta == 1) {
 
-        $block['subject'] = t('Ingest block');
+        $block['subject'] = t('Upload structures');
 
         $block['content'] = drupal_get_form('islandora_chem_sp_ingest_form');
       }

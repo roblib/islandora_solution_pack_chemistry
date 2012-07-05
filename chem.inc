@@ -412,7 +412,7 @@ JS;
    * @param type $file_ext
    * @return string 
    */
-  public function chem2cml($parameterArray = NULL, $dsid, $file, $file_ext) {
+  public function chem2cml($parameterArray = NULL, $dsid, $file, $file_ext, $separate = TRUE) {
     module_load_include('inc', 'fedora_repository', 'api/fedora_item');
     module_load_include('inc', 'islandora_chem_sp', 'FileConversion');
     $file_suffix = '_' . $dsid . '.' . $file_ext;
@@ -428,7 +428,12 @@ JS;
         drupal_set_message(t('obprop failed to run properly'), 'error');
         return $returnValue1;
       }
+      if ($separate) {
       exec("obabel \"$file\" -oinchi --separate -xK", $inchi_key, $returnValue2);
+      }
+      else {
+        exec("obabel \"$file\" -oinchi -xK", $inchi_key, $returnValue2);
+      }
       if ($returnValue2 != '0') {
         drupal_set_message(t('The InChIKey could not be calculated'), 'error');
         return $returnValue2;
