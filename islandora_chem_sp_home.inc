@@ -223,7 +223,6 @@ function islandora_chem_sp_object_form(&$form_state) {
 
 //  var_dump($header2);
 
-    $content1 = "</BR><B>Files</B></BR>";
     if (!empty($rows2)) {
       sort($rows2);
       $content1 .= theme('table', $header2, $rows2);
